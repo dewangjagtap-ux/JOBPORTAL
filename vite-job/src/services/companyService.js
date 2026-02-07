@@ -1,6 +1,6 @@
 // companyService uses localStorage mock data
-const JOBS_KEY = 'cpp_jobs'
-const COMPANIES_KEY = 'cpp_companies'
+const JOBS_KEY = 'jobs'
+const COMPANIES_KEY = 'companies'
 
 function readJobs(){ try { return JSON.parse(localStorage.getItem(JOBS_KEY)) || [] } catch(e){ return [] } }
 function readCompanies(){ try { return JSON.parse(localStorage.getItem(COMPANIES_KEY)) || [] } catch(e){ return [] } }
@@ -17,13 +17,13 @@ function seedCompaniesIfEmpty(){
   }catch(e){}
 }
 
-const getApplicants = async (params, currentCompanyName) => {
-  // return applicants for jobs matching company name
+const getApplicants = async (params, currentCompanyId) => {
+  // return applicants for jobs matching company id
   const jobs = readJobs()
   const applicants = []
   jobs.forEach(j => {
-    if (!currentCompanyName || j.companyName === currentCompanyName) {
-      (j.applicants || []).forEach(a => applicants.push({ ...a, jobTitle: j.title, jobId: j.id }))
+    if (!currentCompanyId || Number(j.companyId) === Number(currentCompanyId)) {
+      (j.applicants || []).forEach(a => applicants.push({ ...a, jobTitle: j.title, jobId: j.id, companyId: j.companyId }))
     }
   })
   return Promise.resolve(applicants)
@@ -38,6 +38,17 @@ const updateApplicationStatus = async (jobId, studentId, status) => {
   if (!app) return Promise.reject(new Error('Application not found'))
   app.status = status
   try { localStorage.setItem(JOBS_KEY, JSON.stringify(jobs)) } catch (e) {}
+
+  // update global applications list status as well
+  try {
+    const appsRaw = localStorage.getItem('applications')
+    const apps = appsRaw ? JSON.parse(appsRaw) : []
+    const a = apps.find(x => Number(x.jobId) === Number(jobId) && Number(x.studentId) === Number(studentId))
+    if (a) { a.status = status; localStorage.setItem('applications', JSON.stringify(apps)) }
+    // notify listeners
+    try { window.dispatchEvent(new CustomEvent('localDataChanged', { detail: { key: 'applications' } })) } catch (e) {}
+  } catch (e) {}
+
   return Promise.resolve(true)
 }
 

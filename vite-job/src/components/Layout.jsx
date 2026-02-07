@@ -7,10 +7,13 @@ import { useAuth } from '../context/AuthContext'
 // Layout component: renders Sidebar when user role is available, and an Outlet for nested routes
 export default function Layout() {
   const { user } = useAuth()
+  const storedAuthRaw = typeof window !== 'undefined' ? localStorage.getItem('authUser') : null
+  const storedRole = storedAuthRaw ? (() => { try { return JSON.parse(storedAuthRaw).role } catch (e) { return null } })() : null
+  const role = user?.role || storedRole
 
   return (
     <div className="d-flex">
-      {user ? <Sidebar role={user.role} /> : null}
+      {role ? <Sidebar role={role} /> : null}
       <Container className="p-4">
         <Outlet />
       </Container>

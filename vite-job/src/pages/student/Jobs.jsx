@@ -15,6 +15,15 @@ export default function StudentJobs() {
     fetchJobs()
   }, [])
 
+  useEffect(() => {
+    const h = (e) => {
+      const k = e?.detail?.key
+      if (!k || k === 'jobs' || k === 'applications') fetchJobs()
+    }
+    window.addEventListener('localDataChanged', h)
+    return () => window.removeEventListener('localDataChanged', h)
+  }, [])
+
   const fetchJobs = async () => {
     setLoading(true)
     setError(null)

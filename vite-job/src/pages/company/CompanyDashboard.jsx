@@ -13,6 +13,15 @@ export default function CompanyDashboard() {
 
   useEffect(() => { fetchStats() }, [user])
 
+  useEffect(() => {
+    const h = (e) => {
+      const k = e?.detail?.key
+      if (!k || k === 'jobs' || k === 'applications') fetchStats()
+    }
+    window.addEventListener('localDataChanged', h)
+    return () => window.removeEventListener('localDataChanged', h)
+  }, [user])
+
   const fetchStats = async () => {
     setLoading(true)
     try {
@@ -22,15 +31,15 @@ export default function CompanyDashboard() {
       const myJobs = jobs.filter(j => !companyId || Number(j.companyId) === Number(companyId))
       setJobsCount(myJobs.length)
 
-      // collect applicants
-      const applicants = []
-      myJobs.forEach(j => (j.applicants || []).forEach(a => applicants.push({ ...a, jobId: j.id, appliedAt: a.appliedAt })))
-      setApplicantsCount(applicants.length)
+  // collect applicants from global applications list
+  const apps = JSON.parse(localStorage.getItem('applications') || '[]')
+  const companyApps = apps.filter(a => Number(a.companyId) === Number(companyId))
+  setApplicantsCount(companyApps.length)
 
-      // last 7 days
-      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-      const recent = applicants.filter(a => a.appliedAt && new Date(a.appliedAt).getTime() >= weekAgo)
-      setNewAppsLast7(recent.length)
+  // last 7 days
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const recent = companyApps.filter(a => a.appliedAt && new Date(a.appliedAt).getTime() >= weekAgo)
+  setNewAppsLast7(recent.length)
     } catch (e) {
       console.error(e)
     } finally { setLoading(false) }

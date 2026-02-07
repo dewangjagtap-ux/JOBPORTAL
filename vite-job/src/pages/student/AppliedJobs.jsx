@@ -11,6 +11,15 @@ export default function AppliedJobs() {
 
   useEffect(() => { if (user) fetchApps() }, [user])
 
+  useEffect(() => {
+    const h = (e) => {
+      const k = e?.detail?.key
+      if (!k || k === 'applications' || k === 'jobs') fetchApps()
+    }
+    window.addEventListener('localDataChanged', h)
+    return () => window.removeEventListener('localDataChanged', h)
+  }, [user])
+
   const fetchApps = async () => {
     setLoading(true); setError(null)
     try {

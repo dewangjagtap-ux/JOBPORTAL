@@ -24,6 +24,15 @@ export default function CompanyJobs() {
 
   useEffect(() => { fetchJobs() }, [user])
 
+  useEffect(() => {
+    const h = (e) => {
+      const k = e?.detail?.key
+      if (!k || k === 'jobs' || k === 'applications') fetchJobs()
+    }
+    window.addEventListener('localDataChanged', h)
+    return () => window.removeEventListener('localDataChanged', h)
+  }, [user])
+
   const fetchJobs = async () => {
     setLoading(true); setError(null)
     try {
@@ -104,7 +113,7 @@ export default function CompanyJobs() {
                       <tr key={j.id}>
                         <td>{j.title}</td>
                         <td className="text-muted small">{j.location}</td>
-                        <td>{(j.applicants || []).length}</td>
+                        <td>{(JSON.parse(localStorage.getItem('applications') || '[]').filter(a => Number(a.jobId) === Number(j.id))).length}</td>
                         <td>
                           <Button size="sm" variant="outline-primary" onClick={() => navigate('/company/applicants')}>View Applicants</Button>{' '}
                           <Button size="sm" variant="outline-danger" onClick={() => handleDelete(j.id)}>Delete</Button>

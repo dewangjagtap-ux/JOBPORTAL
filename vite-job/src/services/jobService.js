@@ -31,6 +31,10 @@ function writeApplications(apps) {
   try { localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(apps)) } catch (e) {}
 }
 
+function notifyChange(key) {
+  try { window.dispatchEvent(new CustomEvent('localDataChanged', { detail: { key } })) } catch (e) { /* ignore */ }
+}
+
 const getJobs = async (params) => {
   seedJobsIfEmpty()
   const jobs = readJobs()
@@ -41,9 +45,10 @@ const getJobs = async (params) => {
 const postJob = async (job) => {
   const jobs = readJobs()
   const id = jobs.reduce((m, j) => Math.max(m, j.id || 0), 0) + 1
-  const newJob = { id, applicants: [], ...job }
+  const newJob = { id, applicants: [], createdAt: new Date().toISOString(), ...job }
   jobs.unshift(newJob)
   writeJobs(jobs)
+  notifyChange('jobs')
   return Promise.resolve(newJob)
 }
 
@@ -51,6 +56,13 @@ const deleteJob = async (jobId) => {
   const jobs = readJobs()
   const next = jobs.filter(j => Number(j.id) !== Number(jobId))
   writeJobs(next)
+  // remove associated applications
+  try {
+    const apps = readApplications().filter(a => Number(a.jobId) !== Number(jobId))
+    writeApplications(apps)
+  } catch (e) {}
+  notifyChange('jobs')
+  notifyChange('applications')
   return Promise.resolve(true)
 }
 
@@ -73,17 +85,19 @@ const apply = async (jobId, applicant) => {
   const existsGlobal = apps.some(a => Number(a.jobId) === Number(jobId) && Number(a.studentId) === Number(applicant.studentId))
   if (existsGlobal) return Promise.resolve({ ok: false, message: 'Already applied' })
 
-  const app = { id: Date.now(), jobId: job.id, studentId: applicant.studentId, name: applicant.name, email: applicant.email, status: 'Applied', appliedAt: new Date().toISOString(), jobTitle: job.title, companyName: job.companyName }
+  const app = { id: Date.now(), jobId: job.id, companyId: job.companyId, studentId: applicant.studentId, name: applicant.name, email: applicant.email, status: 'Applied', appliedAt: new Date().toISOString(), jobTitle: job.title, companyName: job.companyName }
 
   // push into global applications list
   const nextApps = readApplications()
   nextApps.unshift(app)
   writeApplications(nextApps)
+  notifyChange('applications')
 
   // also add to job.applicants for company view
   job.applicants = job.applicants || []
   job.applicants.push({ studentId: applicant.studentId, name: applicant.name, email: applicant.email, status: 'Applied', appliedAt: app.appliedAt })
   writeJobs(jobs)
+  notifyChange('jobs')
 
   return Promise.resolve({ ok: true, application: app })
 }

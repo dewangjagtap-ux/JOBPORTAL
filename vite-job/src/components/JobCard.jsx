@@ -7,6 +7,7 @@ export default function JobCard({ job, onApplied }) {
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
 
   const handleApply = async () => {
     if (!user || user.role !== 'student') return
@@ -48,13 +49,19 @@ export default function JobCard({ job, onApplied }) {
           <div className="text-muted small">{job.location || 'Remote'}</div>
           <div>
             {user && user.role === 'student' ? (
-              (job.applicants || []).some(a => Number(a.studentId) === Number(user.id)) ? (
-                <Badge bg="success">Applied</Badge>
-              ) : (
-                <Button size="sm" onClick={handleApply} disabled={loading}>
-                  {loading ? 'Applying...' : 'Apply'}
-                </Button>
-              )
+              (() => {
+                const appliedLocal = (job.applicants || []).some(a => Number(a.studentId) === Number(user.id))
+                const appsGlobal = JSON.parse(localStorage.getItem('applications') || '[]')
+                const appliedGlobal = appsGlobal.some(a => Number(a.jobId) === Number(job.id) && Number(a.studentId) === Number(user.id))
+                const applied = appliedLocal || appliedGlobal
+                return applied ? (
+                  <Badge bg="success">Applied</Badge>
+                ) : (
+                  <Button size="sm" onClick={handleApply} disabled={loading}>
+                    {loading ? 'Applying...' : 'Apply'}
+                  </Button>
+                )
+              })()
             ) : (
               <Button size="sm" variant="outline-primary">View</Button>
             )}

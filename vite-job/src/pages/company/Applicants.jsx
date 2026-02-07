@@ -14,9 +14,10 @@ export default function Applicants() {
   const fetch = async () => {
     setLoading(true); setError(null)
     try {
-      const data = await companyService.getApplicants({}, user?.id)
-      // normalize to include jobTitle and jobId
-      setApps(data || [])
+      // read global applications and filter by companyId
+      const apps = JSON.parse(localStorage.getItem('applications') || '[]')
+      const mine = apps.filter(a => Number(a.companyId) === Number(user?.id))
+      setApps(mine || [])
     } catch (err) {
       setError(err?.message || err)
     } finally { setLoading(false) }
@@ -25,13 +26,24 @@ export default function Applicants() {
   const updateStatus = async (jobId, studentId, status) => {
     try {
       await companyService.updateApplicationStatus(jobId, studentId, status)
-      // update local state
-      setApps(s => s.map(a => a.jobId === jobId && a.studentId === studentId ? { ...a, status } : a))
+      // update local state by re-fetching latest applications so it's consistent
+      const apps = JSON.parse(localStorage.getItem('applications') || '[]')
+      const mine = apps.filter(a => Number(a.companyId) === Number(user?.id))
+      setApps(mine)
     } catch (e) {
       console.error(e)
       setError('Unable to update status')
     }
   }
+
+  useEffect(() => {
+    const h = (e) => {
+      const k = e?.detail?.key
+      if (!k || k === 'applications' || k === 'jobs') fetch()
+    }
+    window.addEventListener('localDataChanged', h)
+    return () => window.removeEventListener('localDataChanged', h)
+  }, [user])
 
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [selectedApplicant, setSelectedApplicant] = useState(null)
