@@ -25,23 +25,12 @@ export default function CompanyDashboard() {
   const fetchStats = async () => {
     setLoading(true)
     try {
-      const jobs = await jobService.getJobs()
-      const companyId = user?.id
-      // filter jobs posted by this company (by companyId)
-      const myJobs = jobs.filter(j => !companyId || Number(j.companyId) === Number(companyId))
-      setJobsCount(myJobs.length)
-
-  // collect applicants from global applications list
-  const apps = JSON.parse(localStorage.getItem('applications') || '[]')
-  const companyApps = apps.filter(a => Number(a.companyId) === Number(companyId))
-  setApplicantsCount(companyApps.length)
-
-  // last 7 days
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-  const recent = companyApps.filter(a => a.appliedAt && new Date(a.appliedAt).getTime() >= weekAgo)
-  setNewAppsLast7(recent.length)
-    } catch (e) {
-      console.error(e)
+      const data = await companyService.getStats();
+      setJobsCount(data.totalJobs);
+      setApplicantsCount(data.totalApplicants);
+      setNewAppsLast7(data.newApplications);
+    } catch (error) {
+      console.error('Failed to fetch company stats', error);
     } finally { setLoading(false) }
   }
 

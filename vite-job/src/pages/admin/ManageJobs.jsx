@@ -30,7 +30,7 @@ export default function ManageJobs() {
           <tbody>
             {jobs.length === 0 && <tr><td colSpan={3} className="text-center text-muted">No jobs</td></tr>}
             {jobs.map(j => (
-              <tr key={j.id}>
+              <tr key={j._id}>
                 <td>{j.title}</td>
                 <td>{j.companyName}</td>
                 <td>{j.location}</td>

@@ -1,9 +1,26 @@
-// API client removed for offline demo.
-// Original axios-based client has been intentionally disabled to follow the "no backend / no axios" requirement.
-// If you later connect a real backend, replace this file with an axios instance.
+import axios from 'axios';
 
-export function setAuthToken() {
-  // noop in mock mode
+const api = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export const setAuthToken = (token) => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    localStorage.setItem('token', token);
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+    localStorage.removeItem('token');
+  }
+};
+
+// Initialize token from localStorage if exists
+const token = localStorage.getItem('token');
+if (token) {
+  setAuthToken(token);
 }
 
-export default null
+export default api;

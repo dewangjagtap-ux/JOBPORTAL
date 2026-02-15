@@ -17,46 +17,31 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (!user) return
-    try {
-      const raw = localStorage.getItem(`cpp_resume_${user.id}`)
-      if (raw) {
-        setPreview(JSON.parse(raw).dataURL)
-      }
-    } catch (e) {}
     refreshStats()
   }, [user])
 
-  useEffect(() => {
-    // recalc profile completion when mounted
-    calculateProfileCompletion()
-  }, [])
-
   const calculateProfileCompletion = () => {
     if (!user) return setProfileCompletion(0)
-    try {
-      const raw = localStorage.getItem(`cpp_profile_${user.id}`)
-      const p = raw ? JSON.parse(raw) : {}
-      const keys = ['fullName','phone','branch','year','college','cgpa','skills','resumeName']
-      let filled = 0
-      keys.forEach(k => {
-        const v = p[k]
-        if (Array.isArray(v)) { if (v.length) filled++ }
-        else if (v) filled++
-      })
-      const percent = Math.round((filled / keys.length) * 100)
-      setProfileCompletion(percent)
-    } catch (e) { setProfileCompletion(0) }
+    const keys = ['name', 'email', 'phone', 'resume']
+    let filled = 0
+    keys.forEach(k => {
+      if (user[k]) filled++
+    })
+    const percent = Math.round((filled / keys.length) * 100)
+    setProfileCompletion(percent)
   }
 
-  const refreshStats = () => {
+  const refreshStats = async () => {
     try {
-      const jobs = JSON.parse(localStorage.getItem('cpp_jobs') || '[]')
+      const jobs = await studentService.getJobs()
       setJobsCount(jobs.length)
-      const apps = JSON.parse(localStorage.getItem(`cpp_applications_${user.id}`) || '[]')
+
+      const apps = await studentService.getApplications()
       setAppliedCount(apps.length)
-      setRecentApps(apps.slice(0,5))
-      setResumeUploaded(!!localStorage.getItem(`cpp_resume_${user.id}`))
-    } catch (e) {}
+      setRecentApps(apps.slice(0, 5))
+
+      setResumeUploaded(!!user?.resume)
+    } catch (e) { console.error('Stats refresh failed', e) }
     calculateProfileCompletion()
   }
 
@@ -64,10 +49,17 @@ export default function StudentDashboard() {
     if (!file) return setMsg({ type: 'danger', text: 'Choose a PDF file to upload' })
     if (file.type !== 'application/pdf') return setMsg({ type: 'danger', text: 'Only PDF allowed' })
     try {
-      await studentService.uploadResume(user.id, file)
-      const raw = localStorage.getItem(`cpp_resume_${user.id}`)
-      setPreview(JSON.parse(raw).dataURL)
-      setMsg({ type: 'success', text: 'Resume uploaded' })
+      // For local-only preview until backend is fully ready for profile-level resumes
+      const reader = new FileReader()
+      reader.onload = () => {
+        const dataURL = reader.result
+        const resumeData = { name: file.name, dataURL }
+        localStorage.setItem(`cpp_resume_${user.id}`, JSON.stringify(resumeData))
+        setPreview(dataURL)
+        setResumeUploaded(true)
+        setMsg({ type: 'success', text: 'Resume uploaded locally for this session' })
+      }
+      reader.readAsDataURL(file)
     } catch (e) { setMsg({ type: 'danger', text: e.message || 'Upload failed' }) }
   }
   return (
@@ -134,11 +126,11 @@ export default function StudentDashboard() {
                     </thead>
                     <tbody>
                       {recentApps.map((a, idx) => (
-                        <tr key={idx}>
-                          <td>{a.jobTitle}</td>
-                          <td>{a.companyName}</td>
-                          <td>{new Date(a.appliedAt).toLocaleDateString()}</td>
-                          <td><span className={`badge bg-${a.status === 'Applied' ? 'secondary' : a.status === 'Selected' ? 'success' : 'warning'}`}>{a.status}</span></td>
+                        <tr key={a._id || idx}>
+                          <td>{a.job?.title || 'N/A'}</td>
+                          <td>{a.job?.companyName || 'N/A'}</td>
+                          <td>{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A'}</td>
+                          <td><span className={`badge bg-${a.status === 'Applied' ? 'secondary' : a.status === 'Accepted' ? 'success' : 'warning'}`}>{a.status}</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -158,7 +150,7 @@ export default function StudentDashboard() {
                 <>
                   <Form.Group className="mb-2">
                     <Form.Label>Upload Resume (PDF)</Form.Label>
-                    <Form.Control type="file" accept="application/pdf" onChange={(e)=>setFile(e.target.files[0])} />
+                    <Form.Control type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files[0])} />
                   </Form.Group>
                   <div className="d-flex gap-2">
                     <Button size="sm" onClick={handleUpload}>Upload</Button>

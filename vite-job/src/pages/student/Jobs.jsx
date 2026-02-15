@@ -5,31 +5,29 @@ import JobCard from '../../components/JobCard'
 import ApplicationModal from '../../components/ApplicationModal'
 import { useAuth } from '../../context/AuthContext'
 
+import studentService from '../../services/studentService'
+
 export default function StudentJobs() {
   const [jobs, setJobs] = useState([])
+  const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    fetchJobs()
+    fetchData()
   }, [])
 
-  useEffect(() => {
-    const h = (e) => {
-      const k = e?.detail?.key
-      if (!k || k === 'jobs' || k === 'applications') fetchJobs()
-    }
-    window.addEventListener('localDataChanged', h)
-    return () => window.removeEventListener('localDataChanged', h)
-  }, [])
-
-  const fetchJobs = async () => {
+  const fetchData = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await jobService.getJobs()
-      setJobs(data || [])
+      const [jobsData, appsData] = await Promise.all([
+        jobService.getJobs(),
+        studentService.getApplications()
+      ])
+      setJobs(jobsData || [])
+      setApplications(appsData || [])
     } catch (err) {
       setError(err?.response?.data?.message || err.message)
     } finally {
@@ -45,25 +43,28 @@ export default function StudentJobs() {
 
   const filtered = jobs.filter(j => j.title?.toLowerCase().includes(query.toLowerCase()) || j.companyName?.toLowerCase().includes(query.toLowerCase()))
 
+  const isApplied = (jobId) => {
+    return applications.some(a => String(a.job?._id || a.job) === String(jobId));
+  }
+
   const handleApplied = (jobId) => {
-    // refresh jobs list
-    fetchJobs()
+    fetchData() // refresh
     // find job
-    const job = jobs.find(j => Number(j.id) === Number(jobId))
+    const job = jobs.find(j => String(j._id) === String(jobId))
     if (!job || !user) return
     const email = {
       to: user.email,
       subject: `Application Received - ${job.title}`,
       message: `Thank you for applying to ${job.title} at ${job.companyName}. We have received your application and will get back to you.`,
       sentAt: new Date().toISOString(),
-      jobId: job.id,
+      jobId: job._id,
     }
     try {
       const raw = localStorage.getItem('sentEmails')
       const arr = raw ? JSON.parse(raw) : []
       arr.unshift(email)
       localStorage.setItem('sentEmails', JSON.stringify(arr))
-    } catch (e) {}
+    } catch (e) { }
     setAppEmail(email)
     setShowAppModal(true)
     setShowToast(true)
@@ -81,8 +82,8 @@ export default function StudentJobs() {
       {!loading && !error && (
         <Row xs={1} md={2} lg={3} className="g-3">
           {filtered.map(job => (
-            <Col key={job.id}>
-              <JobCard job={job} onApplied={(id) => handleApplied(id)} />
+            <Col key={job._id || job.id}>
+              <JobCard job={job} isApplied={isApplied(job._id || job.id)} onApplied={(id) => handleApplied(id)} />
             </Col>
           ))}
         </Row>

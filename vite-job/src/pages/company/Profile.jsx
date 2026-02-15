@@ -1,37 +1,62 @@
 import React, { useEffect, useState } from 'react'
 import { Card, Form, Button, Alert, Row, Col } from 'react-bootstrap'
 import { useAuth } from '../../context/AuthContext'
-
-const STORAGE_KEY = 'companies'
+import companyService from '../../services/companyService'
 
 export default function CompanyProfile() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [profile, setProfile] = useState({ companyName: '', hrName: '', email: '', phone: '', website: '', description: '', address: '', logo: null })
   const [success, setSuccess] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      const list = raw ? JSON.parse(raw) : []
-      const existing = list.find(c => Number(c.id) === Number(user?.id))
-      if (existing) setProfile({ companyName: existing.name || '', hrName: existing.hrName || '', email: existing.email || '', phone: existing.phone || '', website: existing.website || '', description: existing.description || '', address: existing.address || '', logo: existing.logo || null })
-      else if (user) setProfile(p => ({ ...p, email: user.email, companyName: user.name }))
-    } catch (e) {}
+    if (user) {
+      fetchProfile()
+    }
   }, [user])
 
-  const handleSave = (e) => {
-    e.preventDefault()
+  const fetchProfile = async () => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      const list = raw ? JSON.parse(raw) : []
-      const existingIndex = list.findIndex(c => Number(c.id) === Number(user?.id))
-      const record = { id: user?.id || Date.now(), name: profile.companyName, hrName: profile.hrName, email: profile.email, phone: profile.phone, website: profile.website, description: profile.description, address: profile.address, logo: profile.logo }
-      if (existingIndex >= 0) list[existingIndex] = record
-      else list.push(record)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
-      setSuccess('Profile saved')
-      setTimeout(() => setSuccess(null), 2500)
-    } catch (e) { console.error(e) }
+      const data = await companyService.getProfile()
+      if (data) {
+        setProfile({
+          companyName: data.companyDetails?.companyName || data.name || '',
+          hrName: data.companyDetails?.hrName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          website: data.companyDetails?.website || '',
+          description: data.companyDetails?.description || '',
+          address: data.companyDetails?.address || '',
+          logo: data.companyDetails?.logo || null
+        })
+      }
+    } catch (err) {
+      console.error('Fetch profile error:', err)
+      // Fallback to minimal user info
+      setProfile(p => ({ ...p, email: user.email, companyName: user.name }))
+    }
+  }
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    setError(null)
+    try {
+      const data = await companyService.updateProfile({
+        name: profile.companyName,
+        hrName: profile.hrName,
+        phone: profile.phone,
+        website: profile.website,
+        description: profile.description,
+        address: profile.address
+      })
+      if (data) {
+        updateUser({ name: data.name, companyDetails: data.companyDetails })
+        setSuccess('Profile saved successfully to database')
+        setTimeout(() => setSuccess(null), 2500)
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to save profile')
+    }
   }
 
   const onFile = (e) => {
@@ -47,6 +72,7 @@ export default function CompanyProfile() {
       <Card.Body>
         <h3 className="mb-3">Company Profile</h3>
         {success && <Alert variant="success">{success}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
         <Form onSubmit={handleSave}>
           <Row>
             <Col md={8}>

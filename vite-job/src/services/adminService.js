@@ -1,17 +1,24 @@
-// adminService mocked using localStorage
-const COMPANIES_KEY = 'cpp_companies'
+import api from './api';
 
-function readCompanies(){ try { return JSON.parse(localStorage.getItem(COMPANIES_KEY)) || [] } catch(e){ return [] } }
-function writeCompanies(list){ try { localStorage.setItem(COMPANIES_KEY, JSON.stringify(list)) } catch(e){} }
+const getCompanies = async () => {
+  const { data } = await api.get('/companies');
+  return data;
+};
 
-const approveCompany = async (companyId, approve = true) => {
-  const companies = readCompanies()
-  const idx = companies.findIndex(c => Number(c.id) === Number(companyId))
-  if (idx === -1) return Promise.reject(new Error('Company not found'))
-  companies[idx].approved = !!approve
-  writeCompanies(companies)
-  return Promise.resolve({ ok: true })
-}
+const approveCompany = async (companyId) => {
+  const { data } = await api.patch(`/companies/${companyId}/approve`);
+  return data;
+};
 
-const adminService = { approveCompany }
-export default adminService
+const getUsers = async () => {
+  const { data } = await api.get('/admin/users');
+  return data;
+};
+
+const deleteUser = async (id) => {
+  const { data } = await api.delete(`/admin/users/${id}`);
+  return data;
+};
+
+const adminService = { getCompanies, approveCompany, getUsers, deleteUser };
+export default adminService;

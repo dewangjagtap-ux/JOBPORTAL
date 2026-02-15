@@ -1,32 +1,60 @@
-import React, { useState } from 'react'
-import { Card, Button, Badge } from 'react-bootstrap'
-import jobService from '../services/jobService'
+import React, { useState, useRef } from 'react'
+import { Card, Button, Badge, Form } from 'react-bootstrap'
+import studentService from '../services/studentService'
 import { useAuth } from '../context/AuthContext'
 
-export default function JobCard({ job, onApplied }) {
+export default function JobCard({ job, isApplied, onApplied }) {
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const fileInputRef = useRef(null)
 
-  const handleApply = async () => {
+  const handleApplyClick = async () => {
+    // If student already has a resume in profile, apply directly
+    if (user && user.resume) {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await studentService.applyJob(job._id || job.id)
+        if (res) {
+          onApplied && onApplied(job._id || job.id)
+          setSuccess('Applied successfully using your profile resume!')
+          setTimeout(() => setSuccess(null), 3500)
+        }
+      } catch (err) {
+        setError(err?.response?.data?.message || err.message)
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      // Otherwise trigger file upload
+      if (fileInputRef.current) {
+        fileInputRef.current.click()
+      }
+    }
+  }
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
     if (!user || user.role !== 'student') return
     setLoading(true)
     setError(null)
+
     try {
-      const res = await jobService.apply(job.id, { studentId: user.id, name: user.name, email: user.email })
-      if (res && res.ok) {
-        onApplied && onApplied(job.id)
-        // show local success feedback (toast-like)
+      const res = await studentService.applyJob(job._id || job.id, file)
+      if (res) {
+        onApplied && onApplied(job._id || job.id)
         setSuccess('Application submitted successfully')
         setTimeout(() => setSuccess(null), 3500)
-      } else {
-        setError(res?.message || 'Unable to apply')
       }
     } catch (err) {
       setError(err?.response?.data?.message || err.message)
     } finally {
       setLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -49,21 +77,24 @@ export default function JobCard({ job, onApplied }) {
           <div className="text-muted small">{job.location || 'Remote'}</div>
           <div>
             {user && user.role === 'student' ? (
-              (() => {
-                const appliedLocal = (job.applicants || []).some(a => Number(a.studentId) === Number(user.id))
-                const appsGlobal = JSON.parse(localStorage.getItem('applications') || '[]')
-                const appliedGlobal = appsGlobal.some(a => Number(a.jobId) === Number(job.id) && Number(a.studentId) === Number(user.id))
-                const applied = appliedLocal || appliedGlobal
-                return applied ? (
-                  <Badge bg="success">Applied</Badge>
-                ) : (
-                  <Button size="sm" onClick={handleApply} disabled={loading}>
-                    {loading ? 'Applying...' : 'Apply'}
+              isApplied ? (
+                <Badge bg="success">Applied</Badge>
+              ) : (
+                <>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                  />
+                  <Button size="sm" onClick={handleApplyClick} disabled={loading}>
+                    {loading ? 'Uploading...' : 'Apply'}
                   </Button>
-                )
-              })()
+                </>
+              )
             ) : (
-              <Button size="sm" variant="outline-primary">View</Button>
+              null
             )}
           </div>
         </div>

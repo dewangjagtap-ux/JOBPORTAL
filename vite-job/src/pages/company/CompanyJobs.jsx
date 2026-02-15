@@ -34,12 +34,11 @@ export default function CompanyJobs() {
   }, [user])
 
   const fetchJobs = async () => {
+    if (!user?._id && !user?.id) return
     setLoading(true); setError(null)
     try {
-      const data = await jobService.getJobs()
-  // show only jobs by this company (companyId match)
-  const my = (data || []).filter(j => Number(j.companyId) === Number(user?.id))
-      setJobs(my)
+      const data = await jobService.getJobs(user._id || user.id)
+      setJobs(data || [])
     } catch (err) {
       setError(err?.message || err)
     } finally { setLoading(false) }
@@ -110,13 +109,13 @@ export default function CompanyJobs() {
                       <tr><td colSpan={4} className="text-center text-muted">No jobs posted yet</td></tr>
                     )}
                     {jobs.map(j => (
-                      <tr key={j.id}>
+                      <tr key={j._id}>
                         <td>{j.title}</td>
                         <td className="text-muted small">{j.location}</td>
-                        <td>{(JSON.parse(localStorage.getItem('applications') || '[]').filter(a => Number(a.jobId) === Number(j.id))).length}</td>
+                        <td>{(JSON.parse(localStorage.getItem('applications') || '[]').filter(a => String(a.jobId) === String(j._id))).length}</td>
                         <td>
                           <Button size="sm" variant="outline-primary" onClick={() => navigate('/company/applicants')}>View Applicants</Button>{' '}
-                          <Button size="sm" variant="outline-danger" onClick={() => handleDelete(j.id)}>Delete</Button>
+                          <Button size="sm" variant="outline-danger" onClick={() => handleDelete(j._id)}>Delete</Button>
                         </td>
                       </tr>
                     ))}

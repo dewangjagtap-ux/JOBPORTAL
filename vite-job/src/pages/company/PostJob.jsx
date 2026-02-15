@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Form, Button, Card, Alert } from 'react-bootstrap'
+import { useNavigate } from 'react-router-dom'
 import jobService from '../../services/jobService'
 
 export default function PostJob() {
@@ -10,14 +11,26 @@ export default function PostJob() {
   const [success, setSuccess] = useState(null)
   const [error, setError] = useState(null)
 
+  const [salary, setSalary] = useState('')
+  const [jobType, setJobType] = useState('Full-time')
+  const [skills, setSkills] = useState('')
+  const navigate = useNavigate()
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null); setSuccess(null)
     try {
-      await jobService.postJob({ title, description, location })
+      await jobService.postJob({
+        title,
+        description,
+        location,
+        salary,
+        jobType,
+        skills: skills.split(',').map(s => s.trim()).filter(Boolean)
+      })
       setSuccess('Job posted successfully')
-      setTitle(''); setDescription(''); setLocation('')
+      setTimeout(() => navigate('/company/jobs'), 1500)
     } catch (err) {
       setError(err?.response?.data?.message || err.message)
     } finally { setLoading(false) }
@@ -38,9 +51,25 @@ export default function PostJob() {
             <Form.Label>Description</Form.Label>
             <Form.Control as="textarea" rows={6} value={description} onChange={e => setDescription(e.target.value)} required />
           </Form.Group>
+          <Form.Group className="mb-2">
+            <Form.Label>Salary Range</Form.Label>
+            <Form.Control value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 10 LPA" />
+          </Form.Group>
+          <Form.Group className="mb-2">
+            <Form.Label>Job Type</Form.Label>
+            <Form.Select value={jobType} onChange={e => setJobType(e.target.value)}>
+              <option value="Full-time">Full-time</option>
+              <option value="Internship">Internship</option>
+              <option value="Contract">Contract</option>
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-2">
+            <Form.Label>Skills Required (comma separated)</Form.Label>
+            <Form.Control value={skills} onChange={e => setSkills(e.target.value)} placeholder="React, Node.js, MongoDB" />
+          </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Location</Form.Label>
-            <Form.Control value={location} onChange={e => setLocation(e.target.value)} />
+            <Form.Control value={location} onChange={e => setLocation(e.target.value)} required />
           </Form.Group>
           <div className="d-grid">
             <Button type="submit" disabled={loading}>{loading ? 'Posting...' : 'Post Job'}</Button>

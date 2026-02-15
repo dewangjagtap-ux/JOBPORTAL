@@ -5,11 +5,11 @@ import './index.css'
 
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
-import DarkModeToggle from './components/DarkModeToggle'
 import ResumeModal from './components/ResumeModal'
 import Layout from './components/Layout'
 
 import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
 import StudentJobs from './pages/student/Jobs'
 import AppliedJobs from './pages/student/AppliedJobs'
 import StudentDashboard from './pages/student/StudentDashboard'
@@ -25,6 +25,10 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import ManageCompanies from './pages/admin/ManageCompanies'
 import ManageStudents from './pages/admin/ManageStudents'
 import ManageJobs from './pages/admin/ManageJobs'
+import ManageUsers from './pages/admin/ManageUsers'
+import Reports from './pages/admin/Reports'
+
+import ResumeUpload from './pages/student/ResumeUpload'
 
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -34,22 +38,23 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-
+      <Route path="/register" element={<Register />} />
       <Route path="/" element={<Layout />}>
         {/* Default: send to login so RequireAuth can redirect appropriately */}
         <Route index element={<Navigate to="/login" replace />} />
 
         {/* Student routes (protected) */}
-        <Route path="student" element={<RequireAuth allowedRoles={[ 'student' ]}><Outlet /></RequireAuth>}>
+        <Route path="student" element={<RequireAuth allowedRoles={['student']}><Outlet /></RequireAuth>}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="jobs" element={<StudentJobs />} />
           <Route path="applied" element={<AppliedJobs />} />
+          <Route path="resume" element={<ResumeUpload />} />
           <Route path="profile" element={<StudentProfile />} />
         </Route>
 
         {/* Company routes (protected) */}
-        <Route path="company" element={<RequireAuth allowedRoles={[ 'company' ]}><Outlet /></RequireAuth>}>
+        <Route path="company" element={<RequireAuth allowedRoles={['company']}><Outlet /></RequireAuth>}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<CompanyDashboard />} />
           <Route path="post-job" element={<PostJob />} />
@@ -59,11 +64,13 @@ function AppRoutes() {
         </Route>
 
         {/* Admin routes (protected for admin) */}
-        <Route path="admin" element={<RequireAuth allowedRoles={[ 'admin' ]}><Outlet /></RequireAuth>}>
+        <Route path="admin" element={<RequireAuth allowedRoles={['admin']}><Outlet /></RequireAuth>}>
           <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<ManageUsers />} />
           <Route path="companies" element={<ManageCompanies />} />
           <Route path="students" element={<ManageStudents />} />
           <Route path="jobs" element={<ManageJobs />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
       </Route>
     </Routes>
@@ -99,10 +106,10 @@ export default function App() {
               try {
                 const arr = JSON.parse(raw) || []
                 arr.forEach(a => apps.push(a))
-              } catch (e) {}
+              } catch (e) { }
             }
           }
-        } catch (e) {}
+        } catch (e) { }
         localStorage.setItem('applications', JSON.stringify(apps))
       }
       if (!localStorage.getItem('students')) localStorage.setItem('students', JSON.stringify([]))

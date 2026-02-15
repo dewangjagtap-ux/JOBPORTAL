@@ -1,61 +1,45 @@
-// companyService uses localStorage mock data
-const JOBS_KEY = 'jobs'
-const COMPANIES_KEY = 'companies'
+import api from './api';
 
-function readJobs(){ try { return JSON.parse(localStorage.getItem(JOBS_KEY)) || [] } catch(e){ return [] } }
-function readCompanies(){ try { return JSON.parse(localStorage.getItem(COMPANIES_KEY)) || [] } catch(e){ return [] } }
+const getApplicants = async () => {
+  const { data } = await api.get('/applications/company');
+  return data;
+};
 
-function seedCompaniesIfEmpty(){
-  try{
-    const raw = localStorage.getItem(COMPANIES_KEY)
-    if (raw) return
-    const sample = [
-      { id: 1, name: 'Acme Corp', email: 'hr@acme.com', approved: true },
-      { id: 2, name: 'Globex', email: 'contact@globex.com', approved: true }
-    ]
-    localStorage.setItem(COMPANIES_KEY, JSON.stringify(sample))
-  }catch(e){}
-}
-
-const getApplicants = async (params, currentCompanyId) => {
-  // return applicants for jobs matching company id
-  const jobs = readJobs()
-  const applicants = []
-  jobs.forEach(j => {
-    if (!currentCompanyId || Number(j.companyId) === Number(currentCompanyId)) {
-      (j.applicants || []).forEach(a => applicants.push({ ...a, jobTitle: j.title, jobId: j.id, companyId: j.companyId }))
-    }
-  })
-  return Promise.resolve(applicants)
-}
-
-const updateApplicationStatus = async (jobId, studentId, status) => {
-  const jobs = readJobs()
-  const job = jobs.find(j => Number(j.id) === Number(jobId))
-  if (!job) return Promise.reject(new Error('Job not found'))
-  job.applicants = job.applicants || []
-  const app = job.applicants.find(a => Number(a.studentId) === Number(studentId))
-  if (!app) return Promise.reject(new Error('Application not found'))
-  app.status = status
-  try { localStorage.setItem(JOBS_KEY, JSON.stringify(jobs)) } catch (e) {}
-
-  // update global applications list status as well
-  try {
-    const appsRaw = localStorage.getItem('applications')
-    const apps = appsRaw ? JSON.parse(appsRaw) : []
-    const a = apps.find(x => Number(x.jobId) === Number(jobId) && Number(x.studentId) === Number(studentId))
-    if (a) { a.status = status; localStorage.setItem('applications', JSON.stringify(apps)) }
-    // notify listeners
-    try { window.dispatchEvent(new CustomEvent('localDataChanged', { detail: { key: 'applications' } })) } catch (e) {}
-  } catch (e) {}
-
-  return Promise.resolve(true)
-}
+const updateApplicationStatus = async (applicationId, status) => {
+  const { data } = await api.patch(`/applications/${applicationId}/status`, { status });
+  return data;
+};
 
 const getCompanies = async () => {
-  seedCompaniesIfEmpty()
-  return Promise.resolve(readCompanies())
-}
+  // This was used for student to view companies?
+  // Original: `seedCompaniesIfEmpty` then read.
+  // Backend: `GET /api/companies` is for ADMIN.
+  // Is there a public companies list?
+  // `jobService.getJobs` populates company info.
+  // `companyService.getCompanies` usage:
+  // Page `CompanyProfiles`? Page `ManageCompanies` (Admin)?
 
-const companyService = { getApplicants, getCompanies, updateApplicationStatus }
-export default companyService
+  // If finding companies to verify (Admin), use `/api/companies`.
+  // If student viewing, maybe same?
+
+  const { data } = await api.get('/companies');
+  return data;
+};
+
+const getStats = async () => {
+  const { data } = await api.get('/companies/stats');
+  return data;
+};
+
+const getProfile = async () => {
+  const { data } = await api.get('/companies/profile');
+  return data;
+};
+
+const updateProfile = async (profileData) => {
+  const { data } = await api.put('/companies/profile', profileData);
+  return data;
+};
+
+const companyService = { getApplicants, getCompanies, updateApplicationStatus, getStats, getProfile, updateProfile };
+export default companyService;

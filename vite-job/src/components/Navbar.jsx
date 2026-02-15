@@ -1,7 +1,6 @@
 import React from 'react'
 import { Navbar as BNavbar, Container, Nav, Button } from 'react-bootstrap'
 import { Link, useNavigate } from 'react-router-dom'
-import DarkModeToggle from './DarkModeToggle'
 import { useAuth } from '../context/AuthContext'
 
 export default function Navbar() {
@@ -14,22 +13,14 @@ export default function Navbar() {
   }
 
   return (
-    <BNavbar bg="light" expand="lg" className="sticky-top shadow-sm">
-      <Container fluid>
-        <BNavbar.Brand as={Link} to="/">
-          Campus Placement Portal
+    <BNavbar expand="lg" className="sticky-top shadow-sm py-3 mb-0">
+      <Container>
+        <BNavbar.Brand as={Link} to="/" className="d-flex align-items-center gap-2">
+          <span className="fs-4 fw-bold text-gradient">Campus Placement Portal</span>
         </BNavbar.Brand>
-        <div className="d-flex align-items-center">
-          <DarkModeToggle />
-          <BNavbar.Toggle />
-        </div>
-        <BNavbar.Collapse>
+        <BNavbar.Toggle aria-controls="basic-navbar-nav" />
+        <BNavbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
-            {!user && (
-              <Nav.Link as={Link} to="/login">
-                Login
-              </Nav.Link>
-            )}
             {user && user.role === 'student' && (
               <>
                 <Nav.Link as={Link} to="/student/jobs">Jobs</Nav.Link>

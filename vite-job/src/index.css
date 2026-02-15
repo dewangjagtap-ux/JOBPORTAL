@@ -1,117 +1,153 @@
 :root {
-  /* Theme variables */
-  --bg:#f5f7fb;
-  --card:#ffffff;
-  --muted:#6c757d;
-  --brand:#0d6efd;
-  --accent:#4f46e5;
-  --surface:#f8fafc;
-  --text:#102a43;
-  --shadow: rgba(2,6,23,0.08);
+  /* Premium Design System */
+  --primary: hsl(222, 47%, 11%);
+  --accent: hsl(221, 83%, 53%);
+  --secondary: hsl(215, 20%, 65%);
+  --success: hsl(142, 70%, 45%);
+  --warning: hsl(38, 92%, 50%);
+  --danger: hsl(0, 84%, 60%);
 
-  /* Base typography */
-  font-family: Inter, system-ui, -apple-system, 'Segoe UI',
-    Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.5;
-}
+  --bg: #f8fafc;
+  --surface: rgba(255, 255, 255, 0.8);
+  --card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
 
-/* Global reset */
-* {
-  box-sizing: border-box;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  --glass: backdrop-filter: blur(12px) saturate(180%);
+
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(at 0% 0%, hsla(221, 83%, 53%, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(221, 83%, 53%, 0.03) 0px, transparent 50%);
+  color: var(--text-main);
   min-height: 100vh;
 }
 
-/* Navbar */
-.sticky-top {
-  background: var(--card);
+/* Glass Navbar */
+.navbar {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s ease;
 }
 
-/* Layout */
-.app-container {
-  min-height: calc(100vh - 56px);
+.navbar-brand {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--primary) !important;
+  font-size: 1.25rem;
 }
 
-/* Sidebar */
+/* Premium Sidebar */
 .sidebar {
-  width: 220px;
-  min-height: calc(100vh - 56px);
-}
-.sidebar .sidebar-brand {
-  font-weight: 600;
-  font-size: 1.05rem;
+  width: 260px;
+  background: var(--card);
+  border-right: 1px solid #e2e8f0;
+  padding: 1.5rem 1rem;
 }
 
-/* Job cards */
-.job-card {
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-.job-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 30px var(--shadow);
+.sidebar .nav-link {
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.25rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-truncate-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+.sidebar .nav-link:hover {
+  background: #f1f5f9;
+  color: var(--accent);
+  transform: translateX(4px);
+}
+
+.sidebar .nav-link.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+/* Modern Cards */
+.card {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  /* Fallback: limit height to ~3 lines for non-clamp-supporting browsers */
-  max-height: calc(3 * 1.2em);
 }
 
-/* Dark mode */
-.dark-mode {
-  background: #0b1220;
-  color: #e6eef8;
-}
-.dark-mode .sidebar {
-  background: #071029;
-}
-.dark-mode .sidebar a {
-  color: #cfe3ff;
-}
-.dark-mode .card {
-  background: #081226;
-  color: #e6eef8;
-}
-.dark-mode .sticky-top {
-  background: #061029;
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(37, 99, 235, 0.2);
 }
 
-/* Shadows */
-.shadow-sm {
-  box-shadow: 0 2px 10px rgba(16,42,67,0.06) !important;
+/* Creative Buttons */
+.btn-primary {
+  background-color: var(--accent);
+  border: none;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .sidebar {
-    display: none;
-  }
+.btn-primary:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+/* Glass Form Control */
+.form-control {
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.625rem 1rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 /* Utilities */
-.badge {
-  font-weight: 600;
+.glass-effect {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Form polish */
-input, textarea, select {
-  transition: box-shadow .15s, transform .12s;
-}
-input:focus, textarea:focus, select:focus {
-  box-shadow: 0 6px 18px rgba(79,70,229,0.08);
-  outline: none;
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Table spacing */
-table td, table th {
-  vertical-align: middle;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade {
+  animation: fadeIn 0.5s ease forwards;
 }

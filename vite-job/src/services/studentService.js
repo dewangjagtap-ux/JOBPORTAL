@@ -1,33 +1,56 @@
-// studentService using localStorage as mock backend
-const JOBS_KEY = 'cpp_jobs'
+import api from './api';
 
-function readJobs(){ try { return JSON.parse(localStorage.getItem(JOBS_KEY)) || [] } catch(e){ return [] } }
+const getJobs = async () => {
+  const { data } = await api.get('/jobs');
+  return data;
+};
 
-const getApplications = async (studentId) => {
-  // retrieve applications stored under key 'cpp_applications_<studentId>'
-  try {
-    const key = `cpp_applications_${studentId}`
-    const apps = JSON.parse(localStorage.getItem(key)) || []
-    return Promise.resolve(apps)
-  } catch (e) { return Promise.resolve([]) }
-}
+const getApplications = async () => {
+  const { data } = await api.get('/applications/my');
+  return data;
+};
 
-const uploadResume = async (studentId, file) => {
-  // read file as data URL and store in localStorage under 'cpp_resume_<studentId>'
-  if (!file) return Promise.reject(new Error('No file'))
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const data = { name: file.name, type: file.type, dataURL: reader.result }
-        localStorage.setItem(`cpp_resume_${studentId}`, JSON.stringify(data))
-        resolve(data)
-      } catch (e) { reject(e) }
+const uploadResume = async (file) => {
+  // Just return the file so it can be used in the apply step.
+  // The actual upload happens when applying to a job in the backend model.
+  return Promise.resolve(file);
+};
+
+const applyJob = async (jobId, file = null) => {
+  const formData = new FormData();
+  formData.append('jobId', jobId);
+  if (file) {
+    formData.append('resume', file);
+  }
+
+  const { data } = await api.post('/applications', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return data;
+};
+
+const getProfile = async () => {
+  const { data } = await api.get('/students/profile');
+  return data;
+};
+
+const updateProfile = async (profileData) => {
+  const formData = new FormData();
+  Object.keys(profileData).forEach(key => {
+    if (key === 'resume' && profileData[key] instanceof File) {
+      formData.append('resume', profileData[key]);
+    } else {
+      formData.append(key, profileData[key]);
     }
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsDataURL(file)
-  })
-}
+  });
 
-const studentService = { getApplications, uploadResume }
-export default studentService
+  const { data } = await api.put('/students/profile', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return data;
+};
+
+const studentService = { getApplications, uploadResume, applyJob, getProfile, updateProfile, getJobs };
+export default studentService;

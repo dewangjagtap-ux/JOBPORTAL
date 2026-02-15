@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Form, Button, Card, Alert, Container, ToggleButtonGroup, ToggleButton } from 'react-bootstrap'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Login() {
@@ -24,6 +24,7 @@ export default function Login() {
         // redirect to role-specific dashboard
         if (user.role === 'student') navigate('/student/dashboard')
         else if (user.role === 'company') navigate('/company/dashboard')
+        else if (user.role === 'admin') navigate('/admin/companies')
         else navigate('/')
       }
     } catch (err) {
@@ -34,19 +35,23 @@ export default function Login() {
   }
 
   return (
-    <Container fluid className="p-0" style={{ minHeight: '80vh' }}>
-      <div className="row g-0" style={{ minHeight: '80vh' }}>
-        {/* Left hero area */}
-        <div className="col-md-7 d-none d-md-flex align-items-center justify-content-center" 
-             style={{
-               backgroundImage: "url('https://img.freepik.com/premium-photo/graduation-caps-thrown-air-success-graduates-universityconcept-education-congratulation-graduates-university_43157-4479.jpg?semt=ais_hybrid&w=740&q=80')",
-               backgroundSize: 'cover',
-               backgroundPosition: 'center',
-               minHeight: '80vh'
-             }}>
-          <div className="text-white px-4" style={{ maxWidth: 560 }}>
-            <h1 className="display-5 fw-bold">Your Future Starts Here</h1>
-            <p className="lead mt-3">Find placements, internships and opportunities from top companies. Build your resume, apply with one click, and track your applications — all in one portal.</p>
+    <Container fluid className="p-0 animate-fade" style={{ minHeight: '90vh' }}>
+      <div className="row g-0" style={{ minHeight: '90vh' }}>
+        {/* Left hero area with modern gradient overlay */}
+        <div className="col-md-7 d-none d-md-flex align-items-center justify-content-center p-5 position-relative overflow-hidden"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=2070')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            minHeight: '90vh'
+          }}>
+          <div className="position-absolute w-100 h-100 top-0 start-0" style={{ background: 'linear-gradient(225deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.9) 100%)' }}></div>
+          <div className="text-white position-relative glass-effect p-5 rounded-4 border border-white border-opacity-10" style={{ maxWidth: 640 }}>
+            <h1 className="display-4 fw-black mb-4 ls-tight">Your Career Path Starts <span className="text-info">Right Here.</span></h1>
+            <p className="lead opacity-90 mb-0" style={{ fontSize: '1.25rem', lineHeight: '1.6' }}>
+              The definitive <strong className="text-white">Campus Placement Portal</strong> for top-tier talent and recruiters.
+              Refine your profile, discover elite opportunities, and accelerate your professional journey with precision-matched placements.
+            </p>
           </div>
         </div>
 
@@ -65,38 +70,67 @@ export default function Login() {
                 {error && <Alert variant="danger">{error}</Alert>}
 
                 <Form onSubmit={handleSubmit}>
-                  <div className="mb-3">
-                    <Form.Label className="d-block small text-uppercase text-muted">Sign in as</Form.Label>
-                    <ToggleButtonGroup type="radio" name="role" value={role} onChange={(val) => setRole(val)}>
-                      <ToggleButton id="role-student" value={'student'} variant={role === 'student' ? 'primary' : 'outline-primary'} className="me-2">Student</ToggleButton>
-                      <ToggleButton id="role-company" value={'company'} variant={role === 'company' ? 'primary' : 'outline-secondary'}>Company</ToggleButton>
-                    </ToggleButtonGroup>
+                  <div className="mb-4">
+                    <Form.Label className="d-block small text-uppercase text-muted fw-bold mb-3">I am a</Form.Label>
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant={role === 'student' ? 'primary' : 'outline-primary'}
+                        className="flex-fill"
+                        onClick={() => setRole('student')}
+                      >
+                        🎓 Student
+                      </Button>
+                      <Button
+                        variant={role === 'company' ? 'primary' : 'outline-primary'}
+                        className="flex-fill"
+                        onClick={() => setRole('company')}
+                      >
+                        🏢 Recruiter
+                      </Button>
+                      <Button
+                        variant={role === 'admin' ? 'primary' : 'outline-primary'}
+                        className="flex-fill"
+                        onClick={() => setRole('admin')}
+                      >
+                        🛡️ Admin
+                      </Button>
+                    </div>
                   </div>
 
                   <Form.Group className="mb-3" controlId="loginEmail">
-                    <Form.Label className="small">Email</Form.Label>
-                    <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@college.edu" required />
+                    <Form.Label className="small fw-bold">Email</Form.Label>
+                    <Form.Control
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={role === 'company' ? "hr@acme.com" : "you@college.edu"}
+                      required
+                      className="py-2"
+                    />
                   </Form.Group>
 
-                  <Form.Group className="mb-3" controlId="loginPassword">
-                    <Form.Label className="small">Password</Form.Label>
-                    <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required />
+                  <Form.Group className="mb-4" controlId="loginPassword">
+                    <Form.Label className="small fw-bold">Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="py-2"
+                    />
                   </Form.Group>
 
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="rememberMe" />
-                      <label className="form-check-label small text-muted" htmlFor="rememberMe">Remember me</label>
-                    </div>
-                    <a href="#" className="small">Forgot password?</a>
-                  </div>
-
-                  <div className="d-grid mb-2">
-                    <Button type="submit" disabled={loading} size="lg">{loading ? 'Signing in...' : 'Sign in'}</Button>
+                  <div className="d-grid mb-3">
+                    <Button type="submit" disabled={loading} size="lg" className="py-3 shadow-sm btn-primary">
+                      {loading ? 'Verifying...' : `Login as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
+                    </Button>
                   </div>
 
                   <div className="text-center">
-                    <small className="text-muted">Don't have an account? <a href="/auth/register">Create one</a></small>
+                    <small className="text-muted">
+                      Looking for talent? <Link to="/register" state={{ role: 'company' }} className="fw-bold">Register your company</Link>
+                    </small>
                   </div>
                 </Form>
               </Card.Body>

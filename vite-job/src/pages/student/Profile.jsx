@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Card, Form, Button, Row, Col, Alert, Badge } from 'react-bootstrap'
 import { useAuth } from '../../context/AuthContext'
+import studentService from '../../services/studentService'
 
-// Student profile page — frontend-only. saves to localStorage under 'cpp_profile_<studentId>'
+// Student profile page — persistently saves to backend and synced to Auth state
 export default function Profile() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [profile, setProfile] = useState({
     fullName: '',
     phone: '',
@@ -28,30 +29,54 @@ export default function Profile() {
       const raw = localStorage.getItem(`cpp_profile_${user.id}`)
       if (raw) setProfile(JSON.parse(raw))
       else setProfile(p => ({ ...p, fullName: user.name, email: user.email }))
-    } catch (e) {}
+    } catch (e) { }
   }, [user])
 
-  const save = () => {
+  const save = async () => {
     if (!user) return setMsg({ type: 'danger', text: 'Sign in to save profile' })
     try {
-      localStorage.setItem(`cpp_profile_${user.id}`, JSON.stringify(profile))
-      setMsg({ type: 'success', text: 'Profile saved' })
-      setTimeout(() => setMsg(null), 2500)
-    } catch (e) { setMsg({ type: 'danger', text: 'Failed to save' }) }
+      const updated = await studentService.updateProfile({
+        name: profile.fullName,
+        phone: profile.phone,
+        branch: profile.branch,
+        year: profile.year,
+        college: profile.college,
+        cgpa: profile.cgpa,
+        skills: profile.skills, // Backend likely expects string or array, handled in service/controller
+        about: profile.about,
+      })
+
+      if (updated) {
+        updateUser({ name: updated.name, phone: updated.phone }); // Update auth state
+        localStorage.setItem(`cpp_profile_${user.id}`, JSON.stringify(profile)) // keep local for misc fields
+        setMsg({ type: 'success', text: 'Profile saved successfully to database' })
+        setTimeout(() => setMsg(null), 2500)
+      }
+    } catch (e) {
+      setMsg({ type: 'danger', text: e?.response?.data?.message || 'Failed to save' })
+    }
+  }
+
+  const handleResume = async (file) => {
+    if (!file) return setMsg({ type: 'danger', text: 'No file selected' })
+    if (file.type !== 'application/pdf') return setMsg({ type: 'danger', text: 'Only PDF allowed' })
+
+    try {
+      const data = await studentService.updateProfile({ resume: file })
+      if (data) {
+        updateUser({ resume: data.resume })
+        setProfile(p => ({ ...p, resumeName: file.name }))
+        setMsg({ type: 'success', text: 'Resume updated successfully' })
+      }
+    } catch (e) {
+      setMsg({ type: 'danger', text: 'Resume upload failed' })
+    }
   }
 
   const handlePhoto = (file) => {
     if (!file) return
     const reader = new FileReader()
     reader.onload = () => setProfile(p => ({ ...p, photoDataURL: reader.result }))
-    reader.readAsDataURL(file)
-  }
-
-  const handleResume = (file) => {
-    if (!file) return setMsg({ type: 'danger', text: 'No file selected' })
-    if (file.type !== 'application/pdf') return setMsg({ type: 'danger', text: 'Only PDF allowed' })
-    const reader = new FileReader()
-    reader.onload = () => setProfile(p => ({ ...p, resumeName: file.name, resumeDataURL: reader.result }))
     reader.readAsDataURL(file)
   }
 

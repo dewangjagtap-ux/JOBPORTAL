@@ -23,7 +23,7 @@ export default function AppliedJobs() {
   const fetchApps = async () => {
     setLoading(true); setError(null)
     try {
-      const data = await studentService.getApplications(user?.id)
+      const data = await studentService.getApplications()
       setApps(data || [])
     } catch (err) {
       setError(err?.message || err)
@@ -33,7 +33,7 @@ export default function AppliedJobs() {
   return (
     <div>
       <h2 className="mb-3">Applied Jobs</h2>
-      {(!user) && <Alert variant="info">Sign in as a student to see your applications. You can mock login with any email.</Alert>}
+      {(!user) && <Alert variant="info">Sign in as a student to see your applications.</Alert>}
       {loading && <div className="text-center py-4"><Spinner animation="border" /></div>}
       {error && <Alert variant="danger">{error}</Alert>}
       {!loading && !error && (
@@ -51,10 +51,10 @@ export default function AppliedJobs() {
               <tr><td colSpan={4} className="text-center text-muted">No applications found</td></tr>
             )}
             {apps.map((a, idx) => (
-              <tr key={idx}>
-                <td>{a.jobTitle}</td>
-                <td>{a.companyName}</td>
-                <td>{new Date(a.appliedAt).toLocaleDateString()}</td>
+              <tr key={a._id || idx}>
+                <td>{a.job?.title || 'N/A'}</td>
+                <td>{a.job?.companyName || 'N/A'}</td>
+                <td>{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A'}</td>
                 <td><span className={`badge bg-${statusColor(a.status)}`}>{a.status}</span></td>
               </tr>
             ))}

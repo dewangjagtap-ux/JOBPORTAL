@@ -14,22 +14,17 @@ export default function Applicants() {
   const fetch = async () => {
     setLoading(true); setError(null)
     try {
-      // read global applications and filter by companyId
-      const apps = JSON.parse(localStorage.getItem('applications') || '[]')
-      const mine = apps.filter(a => Number(a.companyId) === Number(user?.id))
-      setApps(mine || [])
+      const data = await companyService.getApplicants()
+      setApps(data || [])
     } catch (err) {
       setError(err?.message || err)
     } finally { setLoading(false) }
   }
 
-  const updateStatus = async (jobId, studentId, status) => {
+  const updateStatus = async (applicationId, status) => {
     try {
-      await companyService.updateApplicationStatus(jobId, studentId, status)
-      // update local state by re-fetching latest applications so it's consistent
-      const apps = JSON.parse(localStorage.getItem('applications') || '[]')
-      const mine = apps.filter(a => Number(a.companyId) === Number(user?.id))
-      setApps(mine)
+      await companyService.updateApplicationStatus(applicationId, status)
+      await fetch()
     } catch (e) {
       console.error(e)
       setError('Unable to update status')
@@ -61,7 +56,7 @@ export default function Applicants() {
       const arr = raw ? JSON.parse(raw) : []
       arr.unshift({ to: selectedApplicant.email, subject: `Update: ${selectedApplicant.jobTitle}`, message: emailMessage, sentAt: new Date().toISOString() })
       localStorage.setItem('sentEmails', JSON.stringify(arr))
-    } catch (e) {}
+    } catch (e) { }
     setShowEmailModal(false)
     alert(`Email sent to ${selectedApplicant.email}`)
   }
@@ -75,53 +70,54 @@ export default function Applicants() {
       {!loading && !error && (
         <Table responsive hover>
           <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Job</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {apps.length === 0 && (
-                  <tr><td colSpan={5} className="text-center text-muted">No applicants yet</td></tr>
-                )}
-                {apps.map((a, idx) => (
-                  <tr key={idx}>
-                    <td>{a.name}</td>
-                    <td>{a.jobTitle}</td>
-                    <td>{a.email}</td>
-                    <td>
-                      <Dropdown>
-                        <Dropdown.Toggle variant="light" size="sm">{a.status || 'Applied'}</Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item onClick={() => updateStatus(a.jobId, a.studentId, 'Shortlisted')}>Shortlist</Dropdown.Item>
-                          <Dropdown.Item onClick={() => updateStatus(a.jobId, a.studentId, 'Rejected')}>Reject</Dropdown.Item>
-                          <Dropdown.Item onClick={() => updateStatus(a.jobId, a.studentId, 'Selected')}>Select</Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
-                    </td>
-                    <td>
-                      <Button size="sm" variant="link" onClick={() => {
-                        // try to open stored resume for the student
-                        const key = `cpp_resume_${a.studentId}`
-                        const data = localStorage.getItem(key)
-                        if (data) {
-                          const obj = JSON.parse(data)
-                          const w = window.open('about:blank')
-                          if (w) w.document.write(`<iframe src="${obj.dataURL}" style="width:100%;height:100%"></iframe>`)
-                        } else {
-                          window.alert('Resume not available')
-                        }
-                      }}>Preview</Button>
-                      {' '}
-                      <Button size="sm" onClick={() => openEmail(a)}>Send Email</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+            <tr>
+              <th>Name</th>
+              <th>Job</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {apps.length === 0 && (
+              <tr><td colSpan={5} className="text-center text-muted">No applicants yet</td></tr>
+            )}
+            {apps.map((a, idx) => (
+              <tr key={a._id || idx}>
+                <td>{a.student?.name || 'N/A'}</td>
+                <td>{a.job?.title || 'N/A'}</td>
+                <td>{a.student?.email || 'N/A'}</td>
+                <td>
+                  <Dropdown>
+                    <Dropdown.Toggle variant="light" size="sm">{a.status || 'Applied'}</Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={() => updateStatus(a._id, 'Shortlisted')}>Shortlist</Dropdown.Item>
+                      <Dropdown.Item onClick={() => updateStatus(a._id, 'Rejected')}>Reject</Dropdown.Item>
+                      <Dropdown.Item onClick={() => updateStatus(a._id, 'Accepted')}>Accept</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </td>
+                <td>
+                  <Button size="sm" variant="link" onClick={() => {
+                    if (a.resume) {
+                      // Construct the full URL if it's a relative path on the backend
+                      const url = a.resume.startsWith('http') ? a.resume : `http://localhost:5000/${a.resume.replace(/\\/g, '/')}`;
+                      window.open(url, '_blank');
+                    } else {
+                      window.alert('Resume not available')
+                    }
+                  }}>Preview</Button>
+                  {' '}
+                  <Button size="sm" onClick={() => openEmail({
+                    name: a.student?.name,
+                    email: a.student?.email,
+                    jobTitle: a.job?.title
+                  })}>Send Email</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
       )}
       {/* Email modal */}
       <Modal show={showEmailModal} onHide={() => setShowEmailModal(false)}>
