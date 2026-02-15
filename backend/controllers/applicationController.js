@@ -30,6 +30,15 @@ const applyForJob = async (req, res) => {
         throw new Error('Job not found');
     }
 
+    // Check applicant limit
+    if (job.maxApplicants > 0) {
+        const count = await Application.countDocuments({ job: jobId });
+        if (count >= job.maxApplicants) {
+            res.status(400);
+            throw new Error('Application limit reached for this job');
+        }
+    }
+
     const existingApplication = await Application.findOne({
         job: jobId,
         student: req.user._id,

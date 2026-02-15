@@ -10,21 +10,33 @@ const updateProfile = async (req, res) => {
         if (user) {
             user.name = req.body.name || user.name;
             user.phone = req.body.phone || user.phone;
+            user.branch = req.body.branch || user.branch;
+            user.year = req.body.year || user.year;
+            user.college = req.body.college || user.college;
+            user.cgpa = req.body.cgpa || user.cgpa;
 
-            if (req.file) {
-                user.resume = req.file.path;
+            if (req.body.skills) {
+                user.skills = Array.isArray(req.body.skills)
+                    ? req.body.skills
+                    : req.body.skills.split(',').map(s => s.trim());
+            }
+
+            user.about = req.body.about || user.about;
+            user.linkedin = req.body.linkedin || user.linkedin;
+            user.github = req.body.github || user.github;
+
+            if (req.files) {
+                if (req.files.resume) {
+                    user.resume = req.files.resume[0].path;
+                }
+                if (req.files.photo) {
+                    user.photo = req.files.photo[0].path;
+                }
             }
 
             const updatedUser = await user.save();
 
-            res.json({
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                resume: updatedUser.resume,
-                phone: updatedUser.phone,
-            });
+            res.json(updatedUser);
         } else {
             res.status(404).json({ message: 'User not found' });
         }

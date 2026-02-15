@@ -6,15 +6,26 @@ const userSchema = mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['student', 'company', 'admin'], default: 'student' },
-    // Profile fields
+    // Student Profile fields
     phone: { type: String },
-    resume: { type: String }, // Path for students
+    photo: { type: String },
+    resume: { type: String },
+    branch: { type: String },
+    year: { type: String },
+    college: { type: String },
+    cgpa: { type: String },
+    skills: [String],
+    about: { type: String },
+    linkedin: { type: String },
+    github: { type: String },
+    // Company Profile fields
     companyDetails: {
         companyName: { type: String },
         description: { type: String },
         website: { type: String },
         logo: { type: String },
         hrName: { type: String },
+        address: { type: String },
     },
     isApproved: { type: Boolean, default: false }
 }, {

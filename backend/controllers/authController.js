@@ -24,6 +24,14 @@ const authUser = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 resume: user.resume,
+                phone: user.phone,
+                branch: user.branch,
+                year: user.year,
+                college: user.college,
+                cgpa: user.cgpa,
+                skills: user.skills,
+                about: user.about,
+                linkedin: user.linkedin,
                 companyDetails: user.companyDetails,
                 token: generateToken(user._id),
             });
@@ -31,6 +39,7 @@ const authUser = async (req, res) => {
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
+        console.error('SERVER ERROR AT LOGIN:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
     }
 };

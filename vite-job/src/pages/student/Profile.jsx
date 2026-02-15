@@ -18,18 +18,39 @@ export default function Profile() {
     linkedin: '',
     github: '',
     photoDataURL: null,
+    photoFile: null,
     resumeName: null,
+    resumeFile: null,
   })
   const [skillInput, setSkillInput] = useState('')
   const [msg, setMsg] = useState(null)
 
   useEffect(() => {
     if (!user) return
-    try {
-      const raw = localStorage.getItem(`cpp_profile_${user?._id}`)
-      if (raw) setProfile(JSON.parse(raw))
-      else setProfile(p => ({ ...p, fullName: user.name, email: user.email }))
-    } catch (e) { }
+    const fetchProfile = async () => {
+      try {
+        const data = await studentService.getProfile()
+        if (data) {
+          setProfile({
+            fullName: data.name || '',
+            phone: data.phone || '',
+            branch: data.branch || '',
+            year: data.year || '',
+            college: data.college || '',
+            cgpa: data.cgpa || '',
+            skills: data.skills || [],
+            about: data.about || '',
+            linkedin: data.linkedin || '',
+            github: data.github || '',
+            photoDataURL: data.photo ? `/${data.photo.replace(/\\/g, '/')}` : null,
+            resumeName: data.resume ? data.resume.split(/[\\/]/).pop() : null,
+          })
+        }
+      } catch (e) {
+        setProfile(p => ({ ...p, fullName: user.name, email: user.email }))
+      }
+    }
+    fetchProfile()
   }, [user])
 
   const save = async () => {
@@ -42,14 +63,17 @@ export default function Profile() {
         year: profile.year,
         college: profile.college,
         cgpa: profile.cgpa,
-        skills: profile.skills, // Backend likely expects string or array, handled in service/controller
+        skills: profile.skills,
         about: profile.about,
+        linkedin: profile.linkedin,
+        github: profile.github,
+        photo: profile.photoFile,
+        resume: profile.resumeFile
       })
 
       if (updated) {
-        updateUser({ name: updated.name, phone: updated.phone }); // Update auth state
-        localStorage.setItem(`cpp_profile_${user?._id}`, JSON.stringify(profile)) // keep local for misc fields
-        setMsg({ type: 'success', text: 'Profile saved successfully to database' })
+        updateUser(updated);
+        setMsg({ type: 'success', text: 'Profile saved successfully' })
         setTimeout(() => setMsg(null), 2500)
       }
     } catch (e) {
@@ -57,26 +81,16 @@ export default function Profile() {
     }
   }
 
-  const handleResume = async (file) => {
-    if (!file) return setMsg({ type: 'danger', text: 'No file selected' })
+  const handleResume = (file) => {
+    if (!file) return
     if (file.type !== 'application/pdf') return setMsg({ type: 'danger', text: 'Only PDF allowed' })
-
-    try {
-      const data = await studentService.updateProfile({ resume: file })
-      if (data) {
-        updateUser({ resume: data.resume })
-        setProfile(p => ({ ...p, resumeName: file.name }))
-        setMsg({ type: 'success', text: 'Resume updated successfully' })
-      }
-    } catch (e) {
-      setMsg({ type: 'danger', text: 'Resume upload failed' })
-    }
+    setProfile(p => ({ ...p, resumeFile: file, resumeName: file.name }))
   }
 
   const handlePhoto = (file) => {
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => setProfile(p => ({ ...p, photoDataURL: reader.result }))
+    reader.onload = () => setProfile(p => ({ ...p, photoFile: file, photoDataURL: reader.result }))
     reader.readAsDataURL(file)
   }
 

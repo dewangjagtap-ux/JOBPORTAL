@@ -14,6 +14,7 @@ export default function PostJob() {
   const [salary, setSalary] = useState('')
   const [jobType, setJobType] = useState('Full-time')
   const [skills, setSkills] = useState('')
+  const [maxApplicants, setMaxApplicants] = useState(0)
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -27,6 +28,7 @@ export default function PostJob() {
         location,
         salary,
         jobType,
+        maxApplicants: parseInt(maxApplicants) || 0,
         skills: skills.split(',').map(s => s.trim()).filter(Boolean)
       })
       setSuccess('Job posted successfully')
@@ -67,9 +69,13 @@ export default function PostJob() {
             <Form.Label>Skills Required (comma separated)</Form.Label>
             <Form.Control value={skills} onChange={e => setSkills(e.target.value)} placeholder="React, Node.js, MongoDB" />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-2">
             <Form.Label>Location</Form.Label>
             <Form.Control value={location} onChange={e => setLocation(e.target.value)} required />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Applicant Limit (0 for no limit)</Form.Label>
+            <Form.Control type="number" value={maxApplicants} onChange={e => setMaxApplicants(e.target.value)} />
           </Form.Group>
           <div className="d-grid">
             <Button type="submit" disabled={loading}>{loading ? 'Posting...' : 'Post Job'}</Button>

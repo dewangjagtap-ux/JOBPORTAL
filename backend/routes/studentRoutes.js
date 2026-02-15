@@ -7,6 +7,9 @@ import upload from '../middleware/uploadMiddleware.js';
 const router = express.Router();
 
 router.get('/profile', protect, authorize('student'), getProfile);
-router.put('/profile', protect, authorize('student'), upload.single('resume'), updateProfile);
+router.put('/profile', protect, authorize('student'), upload.fields([
+    { name: 'resume', maxCount: 1 },
+    { name: 'photo', maxCount: 1 }
+]), updateProfile);
 
 export default router;

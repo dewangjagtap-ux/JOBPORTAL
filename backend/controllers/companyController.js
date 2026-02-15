@@ -107,14 +107,7 @@ const updateCompanyProfile = async (req, res) => {
 
             const updatedUser = await user.save();
 
-            res.json({
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                companyDetails: updatedUser.companyDetails,
-                phone: updatedUser.phone,
-            });
+            res.json(updatedUser);
         } else {
             res.status(404).json({ message: 'Company not found' });
         }

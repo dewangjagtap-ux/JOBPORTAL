@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Job from '../models/Job.js';
 
 // @desc    Fetch all jobs
@@ -9,8 +10,15 @@ const getJobs = async (req, res) => {
         if (req.query.companyId) {
             query.company = req.query.companyId;
         }
-        const jobs = await Job.find(query).populate('company', 'name email');
-        res.json(jobs);
+        const jobs = await Job.find(query).populate('company', 'name email').lean();
+
+        // Add applicant count to each job
+        const jobsWithCounts = await Promise.all(jobs.map(async (job) => {
+            const count = await mongoose.model('Application').countDocuments({ job: job._id });
+            return { ...job, applicantCount: count };
+        }));
+
+        res.json(jobsWithCounts);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -34,7 +42,7 @@ const getJobById = async (req, res) => {
 // @route   POST /api/jobs
 // @access  Private/Company
 const createJob = async (req, res) => {
-    const { title, location, description, skills, salary, jobType, deadline } = req.body;
+    const { title, location, description, skills, salary, jobType, deadline, maxApplicants } = req.body;
 
     const job = new Job({
         title,
@@ -44,6 +52,7 @@ const createJob = async (req, res) => {
         salary,
         jobType,
         deadline,
+        maxApplicants: maxApplicants || 0,
         company: req.user._id,
         companyName: req.user.companyDetails?.companyName || req.user.name,
     });

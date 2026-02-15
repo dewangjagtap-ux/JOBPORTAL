@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Row, Col, Card } from 'react-bootstrap'
+import api from '../../services/api'
 
 export default function AdminDashboard() {
   const [jobsCount, setJobsCount] = useState(0)
@@ -10,14 +11,13 @@ export default function AdminDashboard() {
 
   const fetchCounts = async () => {
     try {
-      const jobs = JSON.parse(localStorage.getItem('cpp_jobs') || '[]')
-      const companies = JSON.parse(localStorage.getItem('cpp_companies') || '[]')
-      const map = new Map()
-      jobs.forEach(j => (j.applicants || []).forEach(a => map.set(a.studentId, a)))
-      setJobsCount(jobs.length)
-      setCompaniesCount(companies.length)
-      setStudentsCount(map.size)
-    } catch (e) { /* ignore for small dashboard */ }
+      const { data } = await api.get('/admin/stats')
+      setJobsCount(data.totalJobs || 0)
+      setCompaniesCount(data.totalCompanies || 0)
+      setStudentsCount(data.totalStudents || 0)
+    } catch (e) {
+      console.error('Failed to fetch dashboard stats:', e)
+    }
   }
 
   return (

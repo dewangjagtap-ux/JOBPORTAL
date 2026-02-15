@@ -10,6 +10,7 @@ const jobSchema = mongoose.Schema({
     jobType: { type: String, enum: ['Full-time', 'Internship', 'Contract'], default: 'Full-time' },
     skills: [{ type: String }],
     deadline: { type: Date },
+    maxApplicants: { type: Number, default: 0 },
 }, {
     timestamps: true,
 });
