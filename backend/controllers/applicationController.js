@@ -1,5 +1,6 @@
 import Application from '../models/Application.js';
 import Job from '../models/Job.js';
+import User from '../models/User.js';
 import { sendEmail } from '../utils/emailService.js';
 
 // @desc    Apply for a job

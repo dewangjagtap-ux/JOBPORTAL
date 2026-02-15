@@ -18,7 +18,7 @@ const register = async (userData) => {
 
 const logout = () => {
   setAuthToken(null);
-  localStorage.removeItem(STORAGE_USER_KEY);
+  localStorage.clear();
   return Promise.resolve();
 };
 

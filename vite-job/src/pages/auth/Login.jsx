@@ -129,7 +129,11 @@ export default function Login() {
 
                   <div className="text-center">
                     <small className="text-muted">
-                      Looking for talent? <Link to="/register" state={{ role: 'company' }} className="fw-bold">Register your company</Link>
+                      {role === 'admin' ? (
+                        <>Want to be an admin? <Link to="/register" state={{ role: 'admin' }} className="fw-bold">Register as Admin</Link></>
+                      ) : (
+                        <>Looking for talent? <Link to="/register" state={{ role: 'company' }} className="fw-bold">Register your company</Link></>
+                      )}
                     </small>
                   </div>
                 </Form>

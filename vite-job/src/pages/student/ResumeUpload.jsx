@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Form, Alert, Row, Col } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
+import studentService from '../../services/studentService';
 
 export default function ResumeUpload() {
     const { user, updateUser } = useAuth();
@@ -19,7 +20,7 @@ export default function ResumeUpload() {
                 return;
             }
             // Fallback to local
-            const profileRaw = localStorage.getItem(`cpp_profile_${user.id}`);
+            const profileRaw = localStorage.getItem(`cpp_profile_${user?._id}`);
             if (profileRaw) {
                 const p = JSON.parse(profileRaw);
                 if (p.resumeDataURL) {
@@ -27,7 +28,7 @@ export default function ResumeUpload() {
                     setResumeName(p.resumeName || 'my_resume.pdf');
                 }
             } else {
-                const raw = localStorage.getItem(`cpp_resume_${user.id}`);
+                const raw = localStorage.getItem(`cpp_resume_${user?._id}`);
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (parsed && parsed.dataURL) {
@@ -67,7 +68,7 @@ export default function ResumeUpload() {
                 setMsg({ type: 'success', text: 'Resume uploaded and saved to profile successfully!' });
 
                 // Update local storage for compatibility/cache
-                localStorage.setItem(`cpp_resume_${user.id}`, JSON.stringify({ name: file.name, path: data.resume }));
+                localStorage.setItem(`cpp_resume_${user?._id}`, JSON.stringify({ name: file.name, path: data.resume }));
             }
         } catch (err) {
             setMsg({ type: 'danger', text: err?.response?.data?.message || err.message });

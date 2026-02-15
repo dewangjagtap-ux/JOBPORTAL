@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 export default function Register() {
     const location = useLocation()
     const initialRole = location.state?.role || 'student'
-    const [role, setRole] = useState(initialRole) // 'student' or 'company'
+    const [role, setRole] = useState(initialRole) // 'student', 'company', or 'admin'
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -101,7 +101,9 @@ export default function Register() {
                 <Card.Body>
                     <div className="text-center mb-4">
                         <h3>Create Account</h3>
-                        <p className="text-muted">Join as a Student or Company</p>
+                        <p className="text-muted">
+                            {role === 'admin' ? 'Register as a Platform Administrator' : 'Join as a Student or Company'}
+                        </p>
                     </div>
 
                     <Nav variant="pills" className="justify-content-center mb-4">
@@ -110,6 +112,9 @@ export default function Register() {
                         </Nav.Item>
                         <Nav.Item>
                             <Nav.Link active={role === 'company'} onClick={() => setRole('company')}>Company</Nav.Link>
+                        </Nav.Item>
+                        <Nav.Item>
+                            <Nav.Link active={role === 'admin'} onClick={() => setRole('admin')}>Admin</Nav.Link>
                         </Nav.Item>
                     </Nav>
 
@@ -165,7 +170,9 @@ export default function Register() {
                         </Form.Group>
 
                         <Button className="w-100 py-3 shadow-sm" type="submit" disabled={loading} size="lg">
-                            {loading ? 'Creating Account...' : role === 'company' ? 'Register Company' : 'Register as Student'}
+                            {loading ? 'Creating Account...' :
+                                role === 'company' ? 'Register Company' :
+                                    role === 'admin' ? 'Register as Admin' : 'Register as Student'}
                         </Button>
                     </Form>
 

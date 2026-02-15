@@ -22,11 +22,26 @@ export default function StudentDashboard() {
 
   const calculateProfileCompletion = () => {
     if (!user) return setProfileCompletion(0)
-    const keys = ['name', 'email', 'phone', 'resume']
+
+    // Use optional fields for completion
+    const keys = ['phone', 'resume', 'branch', 'college', 'skills', 'cgpa', 'about']
+
+    // Check localStorage profile for additional fields
+    let profileData = {}
+    try {
+      const raw = localStorage.getItem(`cpp_profile_${user?._id}`)
+      if (raw) profileData = JSON.parse(raw)
+    } catch (e) { }
+
     let filled = 0
     keys.forEach(k => {
-      if (user[k]) filled++
+      // Check both user context and localStorage profile
+      if (user[k] || profileData[k]) {
+        if (k === 'skills' && Array.isArray(profileData[k]) && profileData[k].length === 0) return
+        filled++
+      }
     })
+
     const percent = Math.round((filled / keys.length) * 100)
     setProfileCompletion(percent)
   }
@@ -54,7 +69,7 @@ export default function StudentDashboard() {
       reader.onload = () => {
         const dataURL = reader.result
         const resumeData = { name: file.name, dataURL }
-        localStorage.setItem(`cpp_resume_${user.id}`, JSON.stringify(resumeData))
+        localStorage.setItem(`cpp_resume_${user?._id}`, JSON.stringify(resumeData))
         setPreview(dataURL)
         setResumeUploaded(true)
         setMsg({ type: 'success', text: 'Resume uploaded locally for this session' })

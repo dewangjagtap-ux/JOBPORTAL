@@ -26,7 +26,7 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return
     try {
-      const raw = localStorage.getItem(`cpp_profile_${user.id}`)
+      const raw = localStorage.getItem(`cpp_profile_${user?._id}`)
       if (raw) setProfile(JSON.parse(raw))
       else setProfile(p => ({ ...p, fullName: user.name, email: user.email }))
     } catch (e) { }
@@ -48,7 +48,7 @@ export default function Profile() {
 
       if (updated) {
         updateUser({ name: updated.name, phone: updated.phone }); // Update auth state
-        localStorage.setItem(`cpp_profile_${user.id}`, JSON.stringify(profile)) // keep local for misc fields
+        localStorage.setItem(`cpp_profile_${user?._id}`, JSON.stringify(profile)) // keep local for misc fields
         setMsg({ type: 'success', text: 'Profile saved successfully to database' })
         setTimeout(() => setMsg(null), 2500)
       }
