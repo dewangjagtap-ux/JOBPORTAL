@@ -27,7 +27,7 @@ export default function CompanyProfile() {
           website: data.companyDetails?.website || '',
           description: data.companyDetails?.description || '',
           address: data.companyDetails?.address || '',
-          logo: data.companyDetails?.logo || null
+          logo: data.companyDetails?.logo ? `/${data.companyDetails.logo.replace(/\\/g, '/')}` : null
         })
       }
     } catch (err) {
@@ -47,7 +47,8 @@ export default function CompanyProfile() {
         phone: profile.phone,
         website: profile.website,
         description: profile.description,
-        address: profile.address
+        address: profile.address,
+        logo: profile.logoFile
       })
       if (data) {
         updateUser({ name: data.name, companyDetails: data.companyDetails })
@@ -63,7 +64,7 @@ export default function CompanyProfile() {
     const f = e.target.files && e.target.files[0]
     if (!f) return
     const reader = new FileReader()
-    reader.onload = () => setProfile(p => ({ ...p, logo: reader.result }))
+    reader.onload = () => setProfile(p => ({ ...p, logo: reader.result, logoFile: f }))
     reader.readAsDataURL(f)
   }
 
