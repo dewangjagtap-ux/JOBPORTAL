@@ -6,22 +6,22 @@ import studentService from '../../services/studentService'
 // Student profile page — persistently saves to backend and synced to Auth state
 export default function Profile() {
   const { user, updateUser } = useAuth()
-  const [profile, setProfile] = useState({
-    fullName: '',
-    phone: '',
-    branch: '',
-    year: '',
-    college: '',
-    cgpa: '',
-    skills: [],
-    about: '',
-    linkedin: '',
-    github: '',
-    photoDataURL: null,
+  const [profile, setProfile] = useState(() => ({
+    fullName: user?.name || '',
+    phone: user?.phone || '',
+    branch: user?.branch || '',
+    year: user?.year || '',
+    college: user?.college || '',
+    cgpa: user?.cgpa || '',
+    skills: user?.skills || [],
+    about: user?.about || '',
+    linkedin: user?.linkedin || '',
+    github: user?.github || '',
+    photoDataURL: user?.photo ? `/${user.photo.replace(/\\/g, '/')}` : null,
     photoFile: null,
-    resumeName: null,
+    resumeName: user?.resume ? user.resume.split(/[\\/]/).pop() : null,
     resumeFile: null,
-  })
+  }))
   const [skillInput, setSkillInput] = useState('')
   const [msg, setMsg] = useState(null)
 
@@ -77,7 +77,7 @@ export default function Profile() {
         setTimeout(() => setMsg(null), 2500)
       }
     } catch (e) {
-      setMsg({ type: 'danger', text: e?.response?.data?.message || 'Failed to save' })
+      setMsg({ type: 'danger', text: e?.response?.data?.message || e?.message || 'Failed to save' })
     }
   }
 

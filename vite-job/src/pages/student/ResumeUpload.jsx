@@ -77,8 +77,13 @@ export default function ResumeUpload() {
 
     const openPreview = () => {
         if (preview) {
+            // If it's a backend path (doesn't start with data:), format it
+            const url = (typeof preview === 'string' && !preview.startsWith('data:'))
+                ? `/${preview.replace(/\\/g, '/')}`
+                : preview;
+
             window.dispatchEvent(new CustomEvent('openResumeModal', {
-                detail: { url: preview, filename: resumeName }
+                detail: { url, filename: resumeName }
             }));
         }
     };

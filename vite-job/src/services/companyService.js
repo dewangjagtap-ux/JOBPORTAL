@@ -1,28 +1,17 @@
 import api from './api';
 
-const getApplicants = async () => {
-  const { data } = await api.get('/applications/company');
+const getApplicants = async (jobId = null) => {
+  const endpoint = jobId ? `/applications/job/${jobId}` : '/applications/company';
+  const { data } = await api.get(endpoint);
   return data;
+};
+
+const getCompanyApplications = async () => {
+  return getApplicants();
 };
 
 const updateApplicationStatus = async (applicationId, status) => {
   const { data } = await api.patch(`/applications/${applicationId}/status`, { status });
-  return data;
-};
-
-const getCompanies = async () => {
-  // This was used for student to view companies?
-  // Original: `seedCompaniesIfEmpty` then read.
-  // Backend: `GET /api/companies` is for ADMIN.
-  // Is there a public companies list?
-  // `jobService.getJobs` populates company info.
-  // `companyService.getCompanies` usage:
-  // Page `CompanyProfiles`? Page `ManageCompanies` (Admin)?
-
-  // If finding companies to verify (Admin), use `/api/companies`.
-  // If student viewing, maybe same?
-
-  const { data } = await api.get('/companies');
   return data;
 };
 
@@ -37,9 +26,28 @@ const getProfile = async () => {
 };
 
 const updateProfile = async (profileData) => {
-  const { data } = await api.put('/companies/profile', profileData);
+  const formData = new FormData();
+  Object.keys(profileData).forEach(key => {
+    if (key === 'logo' && profileData[key] instanceof File) {
+      formData.append('logo', profileData[key]);
+    } else {
+      formData.append(key, profileData[key]);
+    }
+  });
+
+  const { data } = await api.put('/companies/profile', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
   return data;
 };
 
-const companyService = { getApplicants, getCompanies, updateApplicationStatus, getStats, getProfile, updateProfile };
+const companyService = {
+  getApplicants,
+  getCompanyApplications,
+  updateApplicationStatus,
+  getStats,
+  getProfile,
+  updateProfile
+};
+
 export default companyService;

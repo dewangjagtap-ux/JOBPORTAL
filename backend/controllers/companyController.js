@@ -105,6 +105,10 @@ const updateCompanyProfile = async (req, res) => {
             user.companyDetails.description = description || user.companyDetails.description;
             user.companyDetails.address = address || user.companyDetails.address;
 
+            if (req.file) {
+                user.companyDetails.logo = req.file.path;
+            }
+
             const updatedUser = await user.save();
 
             res.json(updatedUser);

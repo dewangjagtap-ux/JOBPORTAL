@@ -32,6 +32,8 @@ const authUser = async (req, res) => {
                 skills: user.skills,
                 about: user.about,
                 linkedin: user.linkedin,
+                github: user.github,
+                photo: user.photo,
                 companyDetails: user.companyDetails,
                 token: generateToken(user._id),
             });
@@ -84,6 +86,8 @@ const registerUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                photo: user.photo,
+                github: user.github,
                 token: generateToken(user._id),
             });
         } else {

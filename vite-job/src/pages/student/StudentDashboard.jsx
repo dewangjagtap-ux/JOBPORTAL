@@ -24,7 +24,7 @@ export default function StudentDashboard() {
     if (!user) return setProfileCompletion(0)
 
     // Use optional fields for completion
-    const keys = ['phone', 'resume', 'branch', 'college', 'skills', 'cgpa', 'about']
+    const keys = ['phone', 'resume', 'branch', 'college', 'skills', 'cgpa', 'about', 'photo']
 
     // Check localStorage profile for additional fields
     let profileData = {}
@@ -55,7 +55,10 @@ export default function StudentDashboard() {
       setAppliedCount(apps.length)
       setRecentApps(apps.slice(0, 5))
 
-      setResumeUploaded(!!user?.resume)
+      if (user?.resume) {
+        setResumeUploaded(true)
+        setPreview(user.resume)
+      }
     } catch (e) { console.error('Stats refresh failed', e) }
     calculateProfileCompletion()
   }
@@ -170,7 +173,22 @@ export default function StudentDashboard() {
                   <div className="d-flex gap-2">
                     <Button size="sm" onClick={handleUpload}>Upload</Button>
                     <Button size="sm" variant="outline-secondary" onClick={() => setPreview(null)}>Remove Preview</Button>
-                    {preview && <Button size="sm" variant="link" onClick={() => window.dispatchEvent(new CustomEvent('openResumeModal', { detail: { url: preview, filename: `${user.name}_resume.pdf` } }))}>Preview</Button>}
+                    {preview && (
+                      <Button
+                        size="sm"
+                        variant="link"
+                        onClick={() => {
+                          const url = (typeof preview === 'string' && !preview.startsWith('data:'))
+                            ? `/${preview.replace(/\\/g, '/')}`
+                            : preview;
+                          window.dispatchEvent(new CustomEvent('openResumeModal', {
+                            detail: { url, filename: `${user.name}_resume.pdf` }
+                          }));
+                        }}
+                      >
+                        Preview
+                      </Button>
+                    )}
                   </div>
                   {msg && <div className={`mt-2 text-${msg.type}`}>{msg.text}</div>}
                 </>

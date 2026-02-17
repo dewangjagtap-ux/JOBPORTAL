@@ -1,8 +1,8 @@
 import api from './api';
 
 const getJobs = async (companyId = null) => {
-  const url = companyId ? `/jobs?companyId=${companyId}` : '/jobs';
-  const { data } = await api.get(url);
+  const query = companyId ? `?companyId=${companyId}` : '';
+  const { data } = await api.get(`/jobs${query}`);
   return data;
 };
 

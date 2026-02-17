@@ -4,27 +4,44 @@ const STORAGE_USER_KEY = 'authUser';
 
 const login = async (credentials) => {
   const { data } = await api.post('/auth/login', credentials);
-  setAuthToken(data.token);
+
+  if (data.token) {
+    setAuthToken(data.token);
+  }
+
   localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(data));
+  localStorage.setItem('userRole', data.role);
+
   return { user: data };
 };
 
 const register = async (userData) => {
   const { data } = await api.post('/auth/register', userData);
-  setAuthToken(data.token);
+
+  if (data.token) {
+    setAuthToken(data.token);
+  }
+
   localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(data));
+  localStorage.setItem('userRole', data.role);
+
   return { user: data };
 };
 
 const logout = () => {
   setAuthToken(null);
-  localStorage.clear();
+  localStorage.removeItem(STORAGE_USER_KEY);
+  localStorage.removeItem('userRole');
   return Promise.resolve();
 };
 
 const getStoredUser = () => {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_USER_KEY));
+    const user = JSON.parse(localStorage.getItem(STORAGE_USER_KEY));
+    if (user && user.token) {
+      setAuthToken(user.token);
+    }
+    return user;
   } catch (e) {
     return null;
   }

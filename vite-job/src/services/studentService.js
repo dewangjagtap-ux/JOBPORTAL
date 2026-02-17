@@ -11,9 +11,12 @@ const getApplications = async () => {
 };
 
 const uploadResume = async (file) => {
-  // Just return the file so it can be used in the apply step.
-  // The actual upload happens when applying to a job in the backend model.
-  return Promise.resolve(file);
+  const formData = new FormData();
+  formData.append('resume', file);
+  const { data } = await api.put('/students/profile', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return data;
 };
 
 const applyJob = async (jobId, file = null) => {
@@ -24,9 +27,7 @@ const applyJob = async (jobId, file = null) => {
   }
 
   const { data } = await api.post('/applications', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
   return data;
 };
@@ -38,10 +39,16 @@ const getProfile = async () => {
 
 const updateProfile = async (profileData) => {
   const formData = new FormData();
+
+  // Append all profile fields to FormData
   Object.keys(profileData).forEach(key => {
-    if (key === 'resume' && profileData[key] instanceof File) {
-      formData.append('resume', profileData[key]);
-    } else {
+    if (key === 'resume' || key === 'photo') {
+      if (profileData[key] instanceof File) {
+        formData.append(key, profileData[key]);
+      }
+    } else if (Array.isArray(profileData[key])) {
+      formData.append(key, profileData[key].join(','));
+    } else if (profileData[key] !== null && profileData[key] !== undefined) {
       formData.append(key, profileData[key]);
     }
   });

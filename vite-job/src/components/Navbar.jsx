@@ -42,9 +42,19 @@ export default function Navbar() {
               </>
             )}
             {user && (
-              <Button variant="outline-secondary" size="sm" onClick={handleLogout} className="ms-2">
-                Logout
-              </Button>
+              <div className="d-flex align-items-center gap-2 ms-lg-3 mt-3 mt-lg-0">
+                {user.role === 'student' && user.photo && (
+                  <img
+                    src={`/${user.photo.replace(/\\/g, '/')}`}
+                    alt="Profile"
+                    className="rounded-circle"
+                    style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #dee2e6' }}
+                  />
+                )}
+                <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
             )}
           </Nav>
         </BNavbar.Collapse>

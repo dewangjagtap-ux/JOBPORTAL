@@ -31,22 +31,23 @@ export default function Applicants() {
     }
   }
 
-  useEffect(() => {
-    const h = (e) => {
-      const k = e?.detail?.key
-      if (!k || k === 'applications' || k === 'jobs') fetch()
-    }
-    window.addEventListener('localDataChanged', h)
-    return () => window.removeEventListener('localDataChanged', h)
-  }, [user])
-
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [selectedApplicant, setSelectedApplicant] = useState(null)
   const [emailMessage, setEmailMessage] = useState('')
 
   const openEmail = (app) => {
     setSelectedApplicant(app)
-    setEmailMessage(`Hello ${app.name},\n\nWe would like to update you about your application for ${app.jobTitle}.`)
+
+    let statusMsg = `We would like to update you about your application for ${app.jobTitle}.`
+    if (app.status === 'Shortlisted') {
+      statusMsg = `Great news! You have been shortlisted for the ${app.jobTitle} position. We will contact you soon for the next steps.`
+    } else if (app.status === 'Accepted') {
+      statusMsg = `Congratulations! We are pleased to inform you that you have been accepted for the ${app.jobTitle} position.`
+    } else if (app.status === 'Rejected') {
+      statusMsg = `Thank you for your interest in the ${app.jobTitle} position. Unfortunately, we have decided to move forward with other candidates at this time.`
+    }
+
+    setEmailMessage(`Hello ${app.name},\n\n${statusMsg}`)
     setShowEmailModal(true)
   }
 
@@ -111,7 +112,8 @@ export default function Applicants() {
                   <Button size="sm" onClick={() => openEmail({
                     name: a.student?.name,
                     email: a.student?.email,
-                    jobTitle: a.job?.title
+                    jobTitle: a.job?.title,
+                    status: a.status
                   })}>Send Email</Button>
                 </td>
               </tr>

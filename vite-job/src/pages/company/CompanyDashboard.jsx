@@ -13,14 +13,7 @@ export default function CompanyDashboard() {
 
   useEffect(() => { fetchStats() }, [user])
 
-  useEffect(() => {
-    const h = (e) => {
-      const k = e?.detail?.key
-      if (!k || k === 'jobs' || k === 'applications') fetchStats()
-    }
-    window.addEventListener('localDataChanged', h)
-    return () => window.removeEventListener('localDataChanged', h)
-  }, [user])
+  useEffect(() => { fetchStats() }, [user])
 
   const fetchStats = async () => {
     setLoading(true)

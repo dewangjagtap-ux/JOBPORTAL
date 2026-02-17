@@ -14,14 +14,15 @@ const storage = multer.diskStorage({
 });
 
 function checkFileType(file, cb) {
-    const filetypes = /pdf|doc|docx/;
+    const isPhoto = file.fieldname === 'photo';
+    const filetypes = isPhoto ? /jpeg|jpg|png/ : /pdf|doc|docx/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
 
     if (extname && mimetype) {
         return cb(null, true);
     } else {
-        cb('Error: Resumes Only (pdf, doc, docx)!');
+        cb(isPhoto ? 'Error: Images Only (jpeg, jpg, png)!' : 'Error: Resumes Only (pdf, doc, docx)!');
     }
 }
 

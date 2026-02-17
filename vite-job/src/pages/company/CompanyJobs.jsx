@@ -24,15 +24,6 @@ export default function CompanyJobs() {
 
   useEffect(() => { fetchJobs() }, [user])
 
-  useEffect(() => {
-    const h = (e) => {
-      const k = e?.detail?.key
-      if (!k || k === 'jobs' || k === 'applications') fetchJobs()
-    }
-    window.addEventListener('localDataChanged', h)
-    return () => window.removeEventListener('localDataChanged', h)
-  }, [user])
-
   const fetchJobs = async () => {
     if (!user?._id && !user?.id) return
     setLoading(true); setError(null)
@@ -56,8 +47,7 @@ export default function CompanyJobs() {
         skills: skills.split(',').map(s => s.trim()).filter(Boolean),
         description,
         lastDate,
-        companyId: user?.id,
-        companyName: user?.name
+        maxApplicants: 0 // Default to 0 in this form
       }
       await jobService.postJob(job)
       // clear form and close modal
@@ -112,7 +102,7 @@ export default function CompanyJobs() {
                       <tr key={j._id}>
                         <td>{j.title}</td>
                         <td className="text-muted small">{j.location}</td>
-                        <td>{(JSON.parse(localStorage.getItem('applications') || '[]').filter(a => String(a.jobId) === String(j._id))).length}</td>
+                        <td>{j.applicantCount || 0}</td>
                         <td>
                           <Button size="sm" variant="outline-primary" onClick={() => navigate('/company/applicants')}>View Applicants</Button>{' '}
                           <Button size="sm" variant="outline-danger" onClick={() => handleDelete(j._id)}>Delete</Button>
