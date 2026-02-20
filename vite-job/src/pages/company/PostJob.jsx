@@ -12,8 +12,10 @@ export default function PostJob() {
   const [error, setError] = useState(null)
 
   const [salary, setSalary] = useState('')
+  const [experience, setExperience] = useState('')
   const [jobType, setJobType] = useState('Full-time')
   const [skills, setSkills] = useState('')
+  const [deadline, setDeadline] = useState('')
   const [maxApplicants, setMaxApplicants] = useState(0)
   const navigate = useNavigate()
 
@@ -27,7 +29,9 @@ export default function PostJob() {
         description,
         location,
         salary,
+        experience,
         jobType,
+        deadline,
         maxApplicants: parseInt(maxApplicants) || 0,
         skills: skills.split(',').map(s => s.trim()).filter(Boolean)
       })
@@ -58,6 +62,10 @@ export default function PostJob() {
             <Form.Control value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 10 LPA" />
           </Form.Group>
           <Form.Group className="mb-2">
+            <Form.Label>Experience Required</Form.Label>
+            <Form.Control value={experience} onChange={e => setExperience(e.target.value)} placeholder="e.g. 2 years" />
+          </Form.Group>
+          <Form.Group className="mb-2">
             <Form.Label>Job Type</Form.Label>
             <Form.Select value={jobType} onChange={e => setJobType(e.target.value)}>
               <option value="Full-time">Full-time</option>
@@ -72,6 +80,10 @@ export default function PostJob() {
           <Form.Group className="mb-2">
             <Form.Label>Location</Form.Label>
             <Form.Control value={location} onChange={e => setLocation(e.target.value)} required />
+          </Form.Group>
+          <Form.Group className="mb-2">
+            <Form.Label>Last Date to Apply</Form.Label>
+            <Form.Control type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Applicant Limit (0 for no limit)</Form.Label>

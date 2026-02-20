@@ -82,6 +82,11 @@ export default function JobCard({ job, isApplied, onApplied }) {
             <Badge bg="light" text="dark" className="border">
               Applicants: {job.applicantCount || 0} {job.maxApplicants > 0 ? `/ ${job.maxApplicants}` : ''}
             </Badge>
+            {job.deadline && (
+              <Badge bg="light" text="danger" className="border">
+                Apply by: {new Date(job.deadline).toLocaleDateString()}
+              </Badge>
+            )}
           </div>
 
           <Card.Text className="mt-3 text-truncate-3 text-secondary" style={{ fontSize: '0.9rem' }}>
@@ -147,12 +152,24 @@ export default function JobCard({ job, isApplied, onApplied }) {
               <p>{job.salary || 'Not specified'}</p>
             </Col>
             <Col sm={6}>
+              <h6 className="fw-bold">Experience Required</h6>
+              <p>{job.experience || 'Not specified'}</p>
+            </Col>
+          </Row>
+          <Row className="mb-4">
+            <Col sm={6}>
               <h6 className="fw-bold">Application Status</h6>
               <p>
                 {job.applicantCount || 0} applicants
                 {job.maxApplicants > 0 ? ` (Limit: ${job.maxApplicants})` : ''}
               </p>
             </Col>
+            {job.deadline && (
+              <Col sm={6}>
+                <h6 className="fw-bold">Last Date to Apply</h6>
+                <p className="text-danger fw-bold">{new Date(job.deadline).toLocaleDateString()}</p>
+              </Col>
+            )}
           </Row>
 
           {job.skills && job.skills.length > 0 && (

@@ -42,7 +42,7 @@ const getJobById = async (req, res) => {
 // @route   POST /api/jobs
 // @access  Private/Company
 const createJob = async (req, res) => {
-    const { title, location, description, skills, salary, jobType, deadline, maxApplicants } = req.body;
+    const { title, location, description, skills, salary, jobType, deadline, maxApplicants, experience } = req.body;
 
     const job = new Job({
         title,
@@ -51,6 +51,7 @@ const createJob = async (req, res) => {
         skills: Array.isArray(skills) ? skills : (skills ? skills.split(',').map(s => s.trim()) : []),
         salary,
         jobType,
+        experience,
         deadline,
         maxApplicants: maxApplicants || 0,
         company: req.user._id,

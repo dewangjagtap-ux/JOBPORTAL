@@ -18,7 +18,9 @@ export default function CompanyJobs() {
   const [experience, setExperience] = useState('')
   const [skills, setSkills] = useState('')
   const [description, setDescription] = useState('')
+  const [jobType, setJobType] = useState('Full-time')
   const [lastDate, setLastDate] = useState('')
+  const [maxApplicants, setMaxApplicants] = useState(0)
   const [posting, setPosting] = useState(false)
   const [showModal, setShowModal] = useState(false)
 
@@ -46,12 +48,13 @@ export default function CompanyJobs() {
         experience,
         skills: skills.split(',').map(s => s.trim()).filter(Boolean),
         description,
-        lastDate,
-        maxApplicants: 0 // Default to 0 in this form
+        jobType,
+        deadline: lastDate,
+        maxApplicants: parseInt(maxApplicants) || 0
       }
       await jobService.postJob(job)
       // clear form and close modal
-      setTitle(''); setLocation(''); setSalary(''); setExperience(''); setSkills(''); setDescription(''); setLastDate('')
+      setTitle(''); setLocation(''); setSalary(''); setExperience(''); setSkills(''); setDescription(''); setLastDate(''); setMaxApplicants(0); setJobType('Full-time')
       setShowModal(false)
       await fetchJobs()
     } catch (err) {
@@ -145,8 +148,20 @@ export default function CompanyJobs() {
               <Form.Control value={skills} onChange={e => setSkills(e.target.value)} />
             </Form.Group>
             <Form.Group className="mb-2">
+              <Form.Label>Job Type</Form.Label>
+              <Form.Select value={jobType} onChange={e => setJobType(e.target.value)}>
+                <option value="Full-time">Full-time</option>
+                <option value="Internship">Internship</option>
+                <option value="Contract">Contract</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-2">
               <Form.Label>Last Date to Apply</Form.Label>
               <Form.Control type="date" value={lastDate} onChange={e => setLastDate(e.target.value)} />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Applicant Limit (0 for no limit)</Form.Label>
+              <Form.Control type="number" value={maxApplicants} onChange={e => setMaxApplicants(e.target.value)} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Job Description</Form.Label>

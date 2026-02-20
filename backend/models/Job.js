@@ -9,6 +9,7 @@ const jobSchema = mongoose.Schema({
     salary: { type: String },
     jobType: { type: String, enum: ['Full-time', 'Internship', 'Contract'], default: 'Full-time' },
     skills: [{ type: String }],
+    experience: { type: String },
     deadline: { type: Date },
     maxApplicants: { type: Number, default: 0 },
 }, {
