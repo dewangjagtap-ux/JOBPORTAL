@@ -106,16 +106,21 @@ const updateCompanyProfile = async (req, res) => {
             user.companyDetails.address = address || user.companyDetails.address;
 
             if (req.file) {
+                console.log('New logo uploaded:', req.file.path);
                 user.companyDetails.logo = req.file.path;
             }
 
+            console.log('Saving updated user...');
             const updatedUser = await user.save();
+            console.log('User saved successfully');
 
             res.json(updatedUser);
         } else {
+            console.log('User not found');
             res.status(404).json({ message: 'Company not found' });
         }
     } catch (error) {
+        console.error('Update Profile Error:', error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -131,8 +131,10 @@ export default function Login() {
                     <small className="text-muted">
                       {role === 'admin' ? (
                         <>Want to be an admin? <Link to="/register" state={{ role: 'admin' }} className="fw-bold">Register as Admin</Link></>
-                      ) : (
+                      ) : role === 'company' ? (
                         <>Looking for talent? <Link to="/register" state={{ role: 'company' }} className="fw-bold">Register your company</Link></>
+                      ) : (
+                        <>Build your future — <Link to="/register" state={{ role: 'student' }} className="fw-bold">Register now</Link> and unlock opportunities!</>
                       )}
                     </small>
                   </div>

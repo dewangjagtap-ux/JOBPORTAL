@@ -28,9 +28,11 @@ const getProfile = async () => {
 const updateProfile = async (profileData) => {
   const formData = new FormData();
   Object.keys(profileData).forEach(key => {
-    if (key === 'logo' && profileData[key] instanceof File) {
-      formData.append('logo', profileData[key]);
-    } else {
+    if (key === 'logo') {
+      if (profileData[key] instanceof File) {
+        formData.append('logo', profileData[key]);
+      }
+    } else if (profileData[key] !== null && profileData[key] !== undefined) {
       formData.append(key, profileData[key]);
     }
   });
