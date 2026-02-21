@@ -27,6 +27,7 @@ import ManageStudents from './pages/admin/ManageStudents'
 import ManageJobs from './pages/admin/ManageJobs'
 import ManageUsers from './pages/admin/ManageUsers'
 import Reports from './pages/admin/Reports'
+import AdminProfile from './pages/admin/Profile'
 
 import ResumeUpload from './pages/student/ResumeUpload'
 
@@ -71,6 +72,7 @@ function AppRoutes() {
           <Route path="students" element={<ManageStudents />} />
           <Route path="jobs" element={<ManageJobs />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="profile" element={<AdminProfile />} />
         </Route>
       </Route>
     </Routes>

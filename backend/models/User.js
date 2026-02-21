@@ -27,6 +27,13 @@ const userSchema = mongoose.Schema({
         hrName: { type: String },
         address: { type: String },
     },
+    // Admin Profile fields
+    adminDetails: {
+        designation: { type: String },
+        department: { type: String },
+        phone: { type: String },
+        photo: { type: String },
+    },
     isApproved: { type: Boolean, default: false }
 }, {
     timestamps: true,

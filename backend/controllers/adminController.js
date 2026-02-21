@@ -59,4 +59,57 @@ const deleteUser = async (req, res) => {
     }
 };
 
-export { getPlatformStats, getAllUsers, deleteUser };
+// @desc    Get admin profile
+// @route   GET /api/admin/profile
+// @access  Private/Admin
+const getAdminProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (user) {
+            res.json(user);
+        } else {
+            res.status(404).json({ message: 'Admin not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update admin profile
+// @route   PUT /api/admin/profile
+// @access  Private/Admin
+const updateAdminProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+
+        if (user) {
+            const { name, phone, designation, department } = req.body;
+
+            if (name !== undefined) user.name = name;
+
+            if (!user.adminDetails) user.adminDetails = {};
+
+            if (phone !== undefined) user.adminDetails.phone = phone;
+            if (designation !== undefined) user.adminDetails.designation = designation;
+            if (department !== undefined) user.adminDetails.department = department;
+
+            if (req.body.removePhoto === 'true') {
+                console.log('Removing admin photo');
+                user.adminDetails.photo = '';
+            } else if (req.file) {
+                console.log('New admin photo uploaded:', req.file.path);
+                user.adminDetails.photo = req.file.path;
+            }
+
+            user.markModified('adminDetails');
+            const updatedUser = await user.save();
+            res.json(updatedUser);
+        } else {
+            res.status(404).json({ message: 'Admin not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export { getPlatformStats, getAllUsers, deleteUser, getAdminProfile, updateAdminProfile };

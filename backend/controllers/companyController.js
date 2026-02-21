@@ -90,16 +90,22 @@ const getCompanyProfile = async (req, res) => {
 const updateCompanyProfile = async (req, res) => {
     try {
         console.log('Update Request Body:', req.body);
+        console.log('Update Request File:', req.file);
         const user = await User.findById(req.user._id);
 
         if (user) {
+            console.log('User found before update:', user.name);
+            console.log('Current companyDetails:', JSON.stringify(user.companyDetails, null, 2));
             const { name, hrName, phone, website, description, address } = req.body;
 
             // Root level fields
             if (name !== undefined) user.name = name;
             if (phone !== undefined) user.phone = phone;
 
-            if (!user.companyDetails) user.companyDetails = {};
+            if (!user.companyDetails) {
+                console.log('Initializing empty companyDetails');
+                user.companyDetails = {};
+            }
 
             // Nested fields
             if (name !== undefined) user.companyDetails.companyName = name;
@@ -109,16 +115,19 @@ const updateCompanyProfile = async (req, res) => {
             if (address !== undefined) user.companyDetails.address = address;
 
             if (req.file) {
-                console.log('New logo uploaded:', req.file.path);
+                console.log('Saving new logo path:', req.file.path);
                 user.companyDetails.logo = req.file.path;
+            } else {
+                console.log('No new logo file in request');
             }
 
             // Explicitly mark companyDetails as modified for Mongoose tracking
             user.markModified('companyDetails');
 
+            console.log('CompanyDetails object before save:', JSON.stringify(user.companyDetails, null, 2));
             console.log('Saving updated user details...');
             const updatedUser = await user.save();
-            console.log('User saved successfully');
+            console.log('User saved successfully. New logo in DB:', updatedUser.companyDetails?.logo);
 
             res.json(updatedUser);
         } else {

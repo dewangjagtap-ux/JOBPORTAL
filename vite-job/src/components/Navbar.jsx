@@ -39,13 +39,22 @@ export default function Navbar() {
               <>
                 <Nav.Link as={Link} to="/admin">Dashboard</Nav.Link>
                 <Nav.Link as={Link} to="/admin/companies">Companies</Nav.Link>
+                <Nav.Link as={Link} to="/admin/profile">Profile</Nav.Link>
               </>
             )}
             {user && (
               <div className="d-flex align-items-center gap-2 ms-lg-3 mt-3 mt-lg-0">
-                {user.role === 'student' && user.photo && (
+                {(user.role === 'student' && user.photo) && (
                   <img
                     src={`/${user.photo.replace(/\\/g, '/')}`}
+                    alt="Profile"
+                    className="rounded-circle"
+                    style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #dee2e6' }}
+                  />
+                )}
+                {(user.role === 'admin' && user.adminDetails?.photo) && (
+                  <img
+                    src={`/${user.adminDetails.photo.replace(/\\/g, '/')}`}
                     alt="Profile"
                     className="rounded-circle"
                     style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #dee2e6' }}
