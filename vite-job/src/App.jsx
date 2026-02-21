@@ -30,10 +30,12 @@ import Reports from './pages/admin/Reports'
 import AdminProfile from './pages/admin/Profile'
 
 import ResumeUpload from './pages/student/ResumeUpload'
+import Notifications from './pages/Notifications'
 
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import RequireAuth from './components/RequireAuth'
+import { Toaster } from 'react-hot-toast'
 
 function AppRoutes() {
   return (
@@ -52,6 +54,7 @@ function AppRoutes() {
           <Route path="applied" element={<AppliedJobs />} />
           <Route path="resume" element={<ResumeUpload />} />
           <Route path="profile" element={<StudentProfile />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
 
         {/* Company routes (protected) */}
@@ -62,6 +65,7 @@ function AppRoutes() {
           <Route path="jobs" element={<CompanyJobs />} />
           <Route path="profile" element={<CompanyProfile />} />
           <Route path="applicants" element={<Applicants />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
 
         {/* Admin routes (protected for admin) */}
@@ -73,6 +77,7 @@ function AppRoutes() {
           <Route path="jobs" element={<ManageJobs />} />
           <Route path="reports" element={<Reports />} />
           <Route path="profile" element={<AdminProfile />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
       </Route>
     </Routes>
@@ -137,6 +142,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <Toaster position="top-right" reverseOrder={false} />
         <Navbar />
         <div className="app-container">
           <AppRoutes />

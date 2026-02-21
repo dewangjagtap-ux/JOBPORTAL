@@ -151,3 +151,6 @@ body {
 .animate-fade {
   animation: fadeIn 0.5s ease forwards;
 }
+.bg-light-primary {
+  background-color: #f0f7ff !important;
+}

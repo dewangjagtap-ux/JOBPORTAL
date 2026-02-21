@@ -17,6 +17,7 @@ export default function Sidebar({ role = 'student' }) {
             <Nav.Link as={Link} to="/student/applied">Applied Jobs</Nav.Link>
             <Nav.Link as={Link} to="/student/resume">Resume Upload</Nav.Link>
             <Nav.Link as={Link} to="/student/profile">Profile</Nav.Link>
+            <Nav.Link as={Link} to="/student/notifications">Notifications</Nav.Link>
           </>
         )}
         {role === 'company' && (
@@ -25,6 +26,7 @@ export default function Sidebar({ role = 'student' }) {
             <Nav.Link as={Link} to="/company/post-job">Add Job</Nav.Link>
             <Nav.Link as={Link} to="/company/applicants">Applicants</Nav.Link>
             <Nav.Link as={Link} to="/company/profile">Company Profile</Nav.Link>
+            <Nav.Link as={Link} to="/company/notifications">Notifications</Nav.Link>
           </>
         )}
         {role === 'admin' && (
@@ -36,6 +38,7 @@ export default function Sidebar({ role = 'student' }) {
             <Nav.Link as={Link} to="/admin/jobs">Manage Jobs</Nav.Link>
             <Nav.Link as={Link} to="/admin/reports">Reports</Nav.Link>
             <Nav.Link as={Link} to="/admin/profile">Admin Profile</Nav.Link>
+            <Nav.Link as={Link} to="/admin/notifications">Notifications</Nav.Link>
           </>
         )}
       </Nav>

@@ -60,6 +60,12 @@ export default function Navbar() {
                     style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #dee2e6' }}
                   />
                 )}
+                <Link
+                  to={user.role === 'admin' ? '/admin/notifications' : user.role === 'company' ? '/company/notifications' : '/student/notifications'}
+                  className="me-2 text-dark position-relative d-flex align-items-center"
+                >
+                  <i className="bi bi-bell-fill fs-5"></i>
+                </Link>
                 <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
                   Logout
                 </Button>
