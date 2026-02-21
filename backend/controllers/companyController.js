@@ -89,39 +89,45 @@ const getCompanyProfile = async (req, res) => {
 // @access  Private/Company
 const updateCompanyProfile = async (req, res) => {
     try {
+        console.log('Update Request Body:', req.body);
         const user = await User.findById(req.user._id);
 
         if (user) {
             const { name, hrName, phone, website, description, address } = req.body;
 
-            user.name = name || user.name;
-            user.phone = phone || user.phone;
+            // Root level fields
+            if (name !== undefined) user.name = name;
+            if (phone !== undefined) user.phone = phone;
 
             if (!user.companyDetails) user.companyDetails = {};
 
-            user.companyDetails.companyName = name || user.companyDetails.companyName;
-            user.companyDetails.hrName = hrName || user.companyDetails.hrName;
-            user.companyDetails.website = website || user.companyDetails.website;
-            user.companyDetails.description = description || user.companyDetails.description;
-            user.companyDetails.address = address || user.companyDetails.address;
+            // Nested fields
+            if (name !== undefined) user.companyDetails.companyName = name;
+            if (hrName !== undefined) user.companyDetails.hrName = hrName;
+            if (website !== undefined) user.companyDetails.website = website;
+            if (description !== undefined) user.companyDetails.description = description;
+            if (address !== undefined) user.companyDetails.address = address;
 
             if (req.file) {
                 console.log('New logo uploaded:', req.file.path);
                 user.companyDetails.logo = req.file.path;
             }
 
-            console.log('Saving updated user...');
+            // Explicitly mark companyDetails as modified for Mongoose tracking
+            user.markModified('companyDetails');
+
+            console.log('Saving updated user details...');
             const updatedUser = await user.save();
             console.log('User saved successfully');
 
             res.json(updatedUser);
         } else {
-            console.log('User not found');
+            console.log('User not found with ID:', req.user._id);
             res.status(404).json({ message: 'Company not found' });
         }
     } catch (error) {
-        console.error('Update Profile Error:', error);
-        res.status(500).json({ message: error.message });
+        console.error('Update Profile Error Details:', error);
+        res.status(500).json({ message: error.message || 'Error saving user profile' });
     }
 };
 

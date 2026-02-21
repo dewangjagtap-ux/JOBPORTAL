@@ -23,6 +23,7 @@ export default function CompanyJobs() {
   const [maxApplicants, setMaxApplicants] = useState(0)
   const [posting, setPosting] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [editingJobId, setEditingJobId] = useState(null)
 
   useEffect(() => { fetchJobs() }, [user])
 
@@ -35,6 +36,10 @@ export default function CompanyJobs() {
     } catch (err) {
       setError(err?.message || err)
     } finally { setLoading(false) }
+  }
+
+  const resetForm = () => {
+    setTitle(''); setLocation(''); setSalary(''); setExperience(''); setSkills(''); setDescription(''); setLastDate(''); setMaxApplicants(0); setJobType('Full-time'); setEditingJobId(null)
   }
 
   const handlePost = async (e) => {
@@ -52,15 +57,34 @@ export default function CompanyJobs() {
         deadline: lastDate,
         maxApplicants: parseInt(maxApplicants) || 0
       }
-      await jobService.postJob(job)
-      // clear form and close modal
-      setTitle(''); setLocation(''); setSalary(''); setExperience(''); setSkills(''); setDescription(''); setLastDate(''); setMaxApplicants(0); setJobType('Full-time')
+
+      if (editingJobId) {
+        await jobService.updateJob(editingJobId, job)
+      } else {
+        await jobService.postJob(job)
+      }
+
+      resetForm()
       setShowModal(false)
       await fetchJobs()
     } catch (err) {
       console.error(err)
       setError(err?.message || err)
     } finally { setPosting(false) }
+  }
+
+  const handleEdit = (job) => {
+    setEditingJobId(job._id)
+    setTitle(job.title || '')
+    setLocation(job.location || '')
+    setSalary(job.salary || '')
+    setExperience(job.experience || '')
+    setSkills(Array.isArray(job.skills) ? job.skills.join(', ') : '')
+    setDescription(job.description || '')
+    setJobType(job.jobType || 'Full-time')
+    setLastDate(job.deadline ? job.deadline.split('T')[0] : '')
+    setMaxApplicants(job.maxApplicants || 0)
+    setShowModal(true)
   }
 
   const handleDelete = async (jobId) => {
@@ -79,7 +103,7 @@ export default function CompanyJobs() {
         <Col md={12} className="mb-3">
           <div className="d-flex justify-content-between align-items-center">
             <div />
-            <Button onClick={() => setShowModal(true)}>Add Job</Button>
+            <Button onClick={() => { resetForm(); setShowModal(true); }}>Add New Job</Button>
           </div>
         </Col>
 
@@ -107,7 +131,8 @@ export default function CompanyJobs() {
                         <td className="text-muted small">{j.location}</td>
                         <td>{j.applicantCount || 0}</td>
                         <td>
-                          <Button size="sm" variant="outline-primary" onClick={() => navigate('/company/applicants')}>View Applicants</Button>{' '}
+                          <Button size="sm" variant="outline-primary" onClick={() => navigate('/company/applicants')}>Applicants</Button>{' '}
+                          <Button size="sm" variant="outline-secondary" onClick={() => handleEdit(j)}>Edit</Button>{' '}
                           <Button size="sm" variant="outline-danger" onClick={() => handleDelete(j._id)}>Delete</Button>
                         </td>
                       </tr>
@@ -120,9 +145,9 @@ export default function CompanyJobs() {
         </Col>
       </Row>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal show={showModal} onHide={() => { setShowModal(false); resetForm(); }}>
         <Modal.Header closeButton>
-          <Modal.Title>Add Job</Modal.Title>
+          <Modal.Title>{editingJobId ? 'Edit Job' : 'Add New Job'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
@@ -168,7 +193,7 @@ export default function CompanyJobs() {
               <Form.Control as="textarea" rows={4} value={description} onChange={e => setDescription(e.target.value)} />
             </Form.Group>
             <div className="d-grid">
-              <Button type="submit" disabled={posting}>{posting ? 'Posting...' : 'Post Job'}</Button>
+              <Button type="submit" disabled={posting}>{posting ? 'Processing...' : (editingJobId ? 'Update Job' : 'Post Job')}</Button>
             </div>
           </Form>
         </Modal.Body>

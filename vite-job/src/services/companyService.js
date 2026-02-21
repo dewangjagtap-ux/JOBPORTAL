@@ -37,9 +37,7 @@ const updateProfile = async (profileData) => {
     }
   });
 
-  const { data } = await api.put('/companies/profile', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const { data } = await api.put('/companies/profile', formData);
   return data;
 };
 

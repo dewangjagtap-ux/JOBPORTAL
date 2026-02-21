@@ -82,4 +82,39 @@ const deleteJob = async (req, res) => {
     }
 };
 
-export { getJobs, getJobById, createJob, deleteJob };
+// @desc    Update a job
+// @route   PUT /api/jobs/:id
+// @access  Private/Company
+const updateJob = async (req, res) => {
+    const { title, location, description, skills, salary, jobType, deadline, maxApplicants, experience } = req.body;
+
+    const job = await Job.findById(req.params.id);
+
+    if (job) {
+        if (job.company.toString() !== req.user._id.toString()) {
+            res.status(401);
+            throw new Error('Not authorized to update this job');
+        }
+
+        job.title = title || job.title;
+        job.location = location || job.location;
+        job.description = description || job.description;
+        job.salary = salary || job.salary;
+        job.jobType = jobType || job.jobType;
+        job.experience = experience || job.experience;
+        job.deadline = deadline || job.deadline;
+        job.maxApplicants = maxApplicants !== undefined ? maxApplicants : job.maxApplicants;
+
+        if (skills) {
+            job.skills = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        const updatedJob = await job.save();
+        res.json(updatedJob);
+    } else {
+        res.status(404);
+        throw new Error('Job not found');
+    }
+};
+
+export { getJobs, getJobById, createJob, deleteJob, updateJob };

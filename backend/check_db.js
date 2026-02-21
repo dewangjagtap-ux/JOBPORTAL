@@ -10,7 +10,13 @@ const checkDB = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/campus-job-portal');
         console.log('--- Database Status ---');
-        console.log('Users:', await User.countDocuments());
+        const users = await User.find({ role: 'company' });
+        console.log('--- Logo report ---');
+        users.forEach(u => {
+            console.log(`User: ${u.name}`);
+            console.log(`Logo field: "${u.companyDetails?.logo}" (type: ${typeof u.companyDetails?.logo})`);
+            console.log(`Has companyDetails: ${!!u.companyDetails}`);
+        });
         console.log('Jobs:', await Job.countDocuments());
         console.log('Applications:', await Application.countDocuments());
         console.log('-----------------------');

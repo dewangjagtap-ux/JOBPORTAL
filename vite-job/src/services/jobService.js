@@ -21,5 +21,10 @@ const deleteJob = async (id) => {
   return data;
 };
 
-const jobService = { getJobs, getJobById, postJob, deleteJob };
+const updateJob = async (id, jobData) => {
+  const { data } = await api.put(`/jobs/${id}`, jobData);
+  return data;
+};
+
+const jobService = { getJobs, getJobById, postJob, deleteJob, updateJob };
 export default jobService;
