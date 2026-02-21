@@ -2,6 +2,7 @@ import React from 'react'
 import { Navbar as BNavbar, Container, Nav, Button } from 'react-bootstrap'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import BadgeCount from './BadgeCount'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -65,6 +66,7 @@ export default function Navbar() {
                   className="me-2 text-dark position-relative d-flex align-items-center"
                 >
                   <i className="bi bi-bell-fill fs-5"></i>
+                  <BadgeCount />
                 </Link>
                 <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
                   Logout

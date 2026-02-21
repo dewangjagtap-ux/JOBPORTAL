@@ -30,7 +30,8 @@ const notificationSchema = mongoose.Schema({
     },
     type: {
         type: String,
-        default: 'announcement' // e.g., 'announcement', 'application_update', 'system'
+        default: 'announcement', // 'announcement', 'job_alert', 'approval', 'reminder', 'system'
+        enum: ['announcement', 'job_alert', 'approval', 'reminder', 'system', 'application_update']
     },
     readBy: [{
         user: {

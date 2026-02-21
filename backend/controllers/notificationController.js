@@ -1,28 +1,58 @@
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
+import { sendEmail } from '../utils/emailService.js';
 
 // @desc    Send a notification
 // @route   POST /api/notifications
 // @access  Private (Admin or Company)
 const sendNotification = async (req, res) => {
-    const { title, message, recipientType, recipientIds, type } = req.body;
+    const { title, message, recipientType, recipientIds, type, sendEmail: shouldSendEmail } = req.body;
 
     try {
         let recipients = [];
 
         if (recipientType === 'specific_students' || recipientType === 'specific_companies' || recipientType === 'admin' || recipientType === 'student') {
             recipients = recipientIds;
+        } else if (recipientType === 'all_students') {
+            const students = await User.find({ role: 'student' }).select('_id email');
+            recipients = students.map(s => s._id);
+        } else if (recipientType === 'all_companies') {
+            const companies = await User.find({ role: 'company' }).select('_id email');
+            recipients = companies.map(c => c._id);
+        } else if (recipientType === 'all_admins') {
+            const admins = await User.find({ role: 'admin' }).select('_id email');
+            recipients = admins.map(a => a._id);
         }
 
         const notification = await Notification.create({
             sender: req.user._id,
             senderRole: req.user.role,
             recipientType,
-            recipients,
+            recipients: recipients.map(r => r._id || r),
             title,
             message,
             type: type || 'announcement'
         });
+
+        // Handle Email Notification
+        if (shouldSendEmail) {
+            let emailRecipients = [];
+            if (recipientType === 'all_students' || recipientType === 'all_companies' || recipientType === 'all_admins') {
+                // Already fetched above
+                emailRecipients = recipients.map(r => r.email).filter(Boolean);
+            } else if (recipientIds && recipientIds.length > 0) {
+                const users = await User.find({ _id: { $in: recipientIds } }).select('email');
+                emailRecipients = users.map(u => u.email).filter(Boolean);
+            }
+
+            if (emailRecipients.length > 0) {
+                // In a real app, you might want to use a queue or bcc
+                // For now, sending individually or simple loop
+                for (const email of emailRecipients) {
+                    await sendEmail(email, title, message);
+                }
+            }
+        }
 
         res.status(201).json(notification);
     } catch (error) {
@@ -38,50 +68,49 @@ const getNotifications = async (req, res) => {
         const userId = req.user._id;
         const userRole = req.user.role;
 
-        const query = {
-            $and: [
-                { isDeletedBy: { $ne: userId } },
-                {
-                    $or: [
-                        { recipients: userId },
-                        { recipientType: 'all_students', senderRole: { $ne: userRole } }, // prevent sender seeing global if they fit role
-                        { recipientType: 'all_companies' },
-                        { recipientType: 'all_admins' }
-                    ]
-                }
-            ]
-        };
+        // Base query for notifications that aren't deleted by the user
+        const baseQuery = { isDeletedBy: { $ne: userId } };
 
-        // Refine global broadcast logic based on role
-        if (userRole === 'student') {
-            query.$and[1].$or = [
-                { recipients: userId },
-                { recipientType: 'all_students' }
-            ];
-        } else if (userRole === 'company') {
-            query.$and[1].$or = [
-                { recipients: userId },
-                { recipientType: 'all_companies' }
-            ];
-        } else if (userRole === 'admin') {
-            query.$and[1].$or = [
-                { recipients: userId },
-                { recipientType: 'all_admins' }
-            ];
-        }
+        let roleBasedQuery = {};
 
-        // Also include notifications SENT by others in the same role (for admin and company)
-        // or just notifications SENT by the user themselves
-        let sentQuery = { sender: userId, isDeletedBy: { $ne: userId } };
         if (userRole === 'admin') {
-            sentQuery = { senderRole: 'admin', isDeletedBy: { $ne: userId } };
+            // Admins can see:
+            // 1. Notifications explicitly sent to admins
+            // 2. All notifications sent by ANY admin (for shared oversight)
+            roleBasedQuery = {
+                $or: [
+                    { recipientType: { $in: ['all_admins', 'admin'] } },
+                    { recipients: userId },
+                    { senderRole: 'admin' }
+                ]
+            };
         } else if (userRole === 'company') {
-            sentQuery = { senderRole: 'company', isDeletedBy: { $ne: userId } };
+            // Companies can see:
+            // 1. Notifications explicitly sent to companies
+            // 2. All notifications sent by ANY company (for shared oversight)
+            roleBasedQuery = {
+                $or: [
+                    { recipientType: { $in: ['all_companies', 'company'] } },
+                    { recipients: userId },
+                    { senderRole: 'company' }
+                ]
+            };
+        } else if (userRole === 'student') {
+            // Students can see:
+            // 1. Notifications explicitly sent to students
+            roleBasedQuery = {
+                $or: [
+                    { recipientType: { $in: ['all_students', 'student'] } },
+                    { recipients: userId }
+                ]
+            };
         }
 
         const notifications = await Notification.find({
-            $or: [query, sentQuery]
-        }).populate('sender', 'name email role').sort({ createdAt: -1 });
+            $and: [baseQuery, roleBasedQuery]
+        })
+            .populate('sender', 'name email role')
+            .sort({ createdAt: -1 });
 
         res.json(notifications);
     } catch (error) {
@@ -100,15 +129,18 @@ const markAsRead = async (req, res) => {
             return res.status(404).json({ message: 'Notification not found' });
         }
 
-        // Check if already read
-        const alreadyRead = notification.readBy.find(read => read.user.toString() === req.user._id.toString());
+        const readIndex = notification.readBy.findIndex(read => read.user.toString() === req.user._id.toString());
 
-        if (!alreadyRead) {
+        if (readIndex === -1) {
+            // Not read yet, so mark as read
             notification.readBy.push({ user: req.user._id });
-            await notification.save();
+        } else {
+            // Already read, so mark as UNREAD
+            notification.readBy.splice(readIndex, 1);
         }
 
-        res.json({ message: 'Marked as read' });
+        await notification.save();
+        res.json({ message: 'Read status updated', isRead: readIndex === -1 });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

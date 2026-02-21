@@ -15,6 +15,11 @@ const markAsRead = async (id) => {
     return response.data;
 };
 
+const toggleRead = async (id) => {
+    const response = await api.put(`/notifications/${id}/read`); // Reusing same endpoint as it now toggles
+    return response.data;
+};
+
 const deleteNotification = async (id) => {
     const response = await api.delete(`/notifications/${id}`);
     return response.data;
@@ -24,6 +29,7 @@ const notificationService = {
     sendNotification,
     getNotifications,
     markAsRead,
+    toggleRead,
     deleteNotification
 };
 
