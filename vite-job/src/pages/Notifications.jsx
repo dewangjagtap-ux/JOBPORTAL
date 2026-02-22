@@ -143,13 +143,13 @@ export default function Notifications() {
         if (user?.role === 'admin') {
             // Admins see anything sent to admins OR anything sent by other admins (oversight)
             const sentByOtherAdmin = effectiveSenderRole === 'admin' && !sentByMe;
-            const sentToAdmin = n.recipientType === 'all_admins' || n.recipientType === 'admin' || n.recipients?.some(r => (r?._id || r)?.toString() === userIdString);
+            const sentToAdmin = n.recipientType === 'all_admins' || n.recipientType === 'admin' || n.recipientType === 'all' || n.recipients?.some(r => (r?._id || r)?.toString() === userIdString);
             return sentToAdmin || sentByOtherAdmin;
         }
         if (user?.role === 'company') {
             // Companies see anything sent to them OR anything sent by other companies (oversight)
             const sentByOtherCompany = effectiveSenderRole === 'company' && !sentByMe;
-            const sentToCompany = n.recipientType === 'all_companies' || n.recipients?.some(r => (r?._id || r)?.toString() === userIdString);
+            const sentToCompany = n.recipientType === 'all_companies' || n.recipientType === 'all' || n.recipients?.some(r => (r?._id || r)?.toString() === userIdString);
             return sentToCompany || sentByOtherCompany;
         }
         // Students see only what is sent to them
@@ -352,7 +352,7 @@ export default function Notifications() {
                                                                 <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
                                                                     <h5 className="mb-0 fw-semibold">{n.title}</h5>
                                                                     <Badge bg="secondary" className="text-uppercase small rounded-pill px-2" style={{ fontSize: '0.65rem' }}>
-                                                                        To: {n.recipientType.replace(/_/g, ' ')}
+                                                                        To: {n.recipientType === 'all' ? 'Everyone' : n.recipientType.replace(/_/g, ' ')}
                                                                     </Badge>
                                                                 </div>
                                                                 <p className="text-secondary mb-2 small">{n.message}</p>
@@ -415,6 +415,7 @@ export default function Notifications() {
                                                 <option value="all_companies">All Companies</option>
                                                 <option value="specific_companies">Specific Companies</option>
                                                 <option value="all_admins">Other Admins</option>
+                                                <option value="all">Everyone (All Users)</option>
                                             </>
                                         )}
                                         {user.role === 'company' && (

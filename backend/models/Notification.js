@@ -14,7 +14,7 @@ const notificationSchema = mongoose.Schema({
     recipientType: {
         type: String,
         required: true,
-        enum: ['all_students', 'specific_students', 'all_companies', 'specific_companies', 'all_admins', 'admin', 'student']
+        enum: ['all_students', 'specific_students', 'all_companies', 'specific_companies', 'all_admins', 'admin', 'student', 'all']
     },
     recipients: [{
         type: mongoose.Schema.Types.ObjectId,

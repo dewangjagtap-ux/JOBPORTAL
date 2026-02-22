@@ -22,6 +22,9 @@ const sendNotification = async (req, res) => {
         } else if (recipientType === 'all_admins') {
             const admins = await User.find({ role: 'admin' }).select('_id email');
             recipients = admins.map(a => a._id);
+        } else if (recipientType === 'all') {
+            const allUsers = await User.find({}).select('_id email');
+            recipients = allUsers.map(u => u._id);
         }
 
         const notification = await Notification.create({
@@ -37,7 +40,7 @@ const sendNotification = async (req, res) => {
         // Handle Email Notification
         if (shouldSendEmail) {
             let emailRecipients = [];
-            if (recipientType === 'all_students' || recipientType === 'all_companies' || recipientType === 'all_admins') {
+            if (recipientType === 'all_students' || recipientType === 'all_companies' || recipientType === 'all_admins' || recipientType === 'all') {
                 // Already fetched above
                 emailRecipients = recipients.map(r => r.email).filter(Boolean);
             } else if (recipientIds && recipientIds.length > 0) {
@@ -79,7 +82,7 @@ const getNotifications = async (req, res) => {
             // 2. All notifications sent by ANY admin (for shared oversight)
             roleBasedQuery = {
                 $or: [
-                    { recipientType: { $in: ['all_admins', 'admin'] } },
+                    { recipientType: { $in: ['all_admins', 'admin', 'all'] } },
                     { recipients: userId },
                     { senderRole: 'admin' }
                 ]
@@ -90,7 +93,7 @@ const getNotifications = async (req, res) => {
             // 2. All notifications sent by ANY company (for shared oversight)
             roleBasedQuery = {
                 $or: [
-                    { recipientType: { $in: ['all_companies', 'company'] } },
+                    { recipientType: { $in: ['all_companies', 'company', 'all'] } },
                     { recipients: userId },
                     { senderRole: 'company' }
                 ]
@@ -100,7 +103,7 @@ const getNotifications = async (req, res) => {
             // 1. Notifications explicitly sent to students
             roleBasedQuery = {
                 $or: [
-                    { recipientType: { $in: ['all_students', 'student'] } },
+                    { recipientType: { $in: ['all_students', 'student', 'all'] } },
                     { recipients: userId }
                 ]
             };
