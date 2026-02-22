@@ -131,7 +131,6 @@ export default function AdminProfile() {
                                     <Form.Group>
                                         <Form.Label className="small fw-bold text-muted text-uppercase">Email Address</Form.Label>
                                         <Form.Control value={profile.email} disabled type="email" />
-                                        <Form.Text className="text-muted">Email cannot be changed.</Form.Text>
                                     </Form.Group>
                                 </Col>
                                 <Col md={6}>
