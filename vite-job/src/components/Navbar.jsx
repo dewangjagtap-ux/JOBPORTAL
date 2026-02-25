@@ -53,6 +53,14 @@ export default function Navbar() {
                     style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #dee2e6' }}
                   />
                 )}
+                {(user.role === 'company' && user.companyDetails?.logo) && (
+                  <img
+                    src={`/${user.companyDetails.logo.replace(/\\/g, '/')}`}
+                    alt="Company Logo"
+                    className="rounded-circle"
+                    style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #dee2e6' }}
+                  />
+                )}
                 {(user.role === 'admin' && user.adminDetails?.photo) && (
                   <img
                     src={`/${user.adminDetails.photo.replace(/\\/g, '/')}`}

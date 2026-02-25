@@ -37,7 +37,9 @@ const updateProfile = async (profileData) => {
     }
   });
 
-  const { data } = await api.put('/admin/profile', formData);
+  const { data } = await api.put('/admin/profile', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
   return data;
 };
 

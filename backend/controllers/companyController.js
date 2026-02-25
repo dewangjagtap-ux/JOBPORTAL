@@ -114,11 +114,14 @@ const updateCompanyProfile = async (req, res) => {
             if (description !== undefined) user.companyDetails.description = description;
             if (address !== undefined) user.companyDetails.address = address;
 
-            if (req.file) {
+            if (req.body.removeLogo === 'true') {
+                console.log('Removing company logo');
+                user.companyDetails.logo = '';
+            } else if (req.file) {
                 console.log('Saving new logo path:', req.file.path);
                 user.companyDetails.logo = req.file.path;
             } else {
-                console.log('No new logo file in request');
+                console.log('No new logo file or remove request');
             }
 
             // Explicitly mark companyDetails as modified for Mongoose tracking

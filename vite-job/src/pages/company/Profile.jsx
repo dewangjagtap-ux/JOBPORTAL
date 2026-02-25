@@ -48,12 +48,24 @@ export default function CompanyProfile() {
         name: profile.companyName,
         hrName: profile.hrName,
         phone: profile.phone,
+        website: profile.website,
+        description: profile.description,
         address: profile.address,
         logo: logoFile,
         removeLogo: removeLogo
       })
       if (data) {
         updateUser({ name: data.name, companyDetails: data.companyDetails })
+        setProfile({
+          companyName: data.companyDetails?.companyName || data.name || '',
+          hrName: data.companyDetails?.hrName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          website: data.companyDetails?.website || '',
+          description: data.companyDetails?.description || '',
+          address: data.companyDetails?.address || '',
+          logo: data.companyDetails?.logo ? `/${data.companyDetails.logo.replace(/\\/g, '/')}` : null
+        })
         setSuccess('Profile updated successfully')
         setLogoFile(null)
         setRemoveLogo(false)
