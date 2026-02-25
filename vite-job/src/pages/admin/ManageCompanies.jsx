@@ -41,10 +41,10 @@ export default function ManageCompanies() {
       {!loading && !error && (
         <Table striped hover>
           <thead>
-            <tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>Name</th><th>Email</th><th>Status</th></tr>
           </thead>
           <tbody>
-            {companies.length === 0 && <tr><td colSpan={4} className="text-center text-muted">No companies</td></tr>}
+            {companies.length === 0 && <tr><td colSpan={3} className="text-center text-muted">No companies</td></tr>}
             {companies.map(c => (
               <tr key={c._id || c.id}>
                 <td className="align-middle">{c.name}</td>
@@ -53,18 +53,6 @@ export default function ManageCompanies() {
                   <Badge bg={c.isApproved ? 'success' : 'warning'} className="px-3 py-2">
                     {c.isApproved ? 'Approved' : 'Pending Approval'}
                   </Badge>
-                </td>
-                <td className="align-middle">
-                  {!c.isApproved && (
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() => approve(c._id || c.id, true)}
-                      className="shadow-sm"
-                    >
-                      Approve Company
-                    </Button>
-                  )}
                 </td>
               </tr>
             ))}
