@@ -171,9 +171,33 @@ const deleteNotification = async (req, res) => {
     }
 };
 
+// @desc    Get potential recipients for notifications
+// @route   GET /api/notifications/recipients
+// @access  Private (Admin or Company)
+const getRecipients = async (req, res) => {
+    try {
+        let query = {};
+        if (req.user.role === 'company') {
+            // Companies can see students and admins
+            query = { role: { $in: ['student', 'admin'] } };
+        } else if (req.user.role === 'admin') {
+            // Admins can see everyone
+            query = {};
+        } else {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const recipients = await User.find(query).select('name email role');
+        res.json(recipients);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export {
     sendNotification,
     getNotifications,
     markAsRead,
-    deleteNotification
+    deleteNotification,
+    getRecipients
 };

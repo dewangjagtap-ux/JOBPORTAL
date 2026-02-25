@@ -5,6 +5,11 @@ const sendNotification = async (notificationData) => {
     return response.data;
 };
 
+const getRecipients = async () => {
+    const response = await api.get('/notifications/recipients');
+    return response.data;
+};
+
 const getNotifications = async () => {
     const response = await api.get('/notifications');
     return response.data;
@@ -27,6 +32,7 @@ const deleteNotification = async (id) => {
 
 const notificationService = {
     sendNotification,
+    getRecipients,
     getNotifications,
     markAsRead,
     toggleRead,

@@ -56,7 +56,7 @@ export default function Notifications() {
 
     const fetchRecipients = async () => {
         try {
-            const users = await adminService.getUsers();
+            const users = await notificationService.getRecipients();
             setRecipients(users);
         } catch (error) {
             console.error('Failed to fetch recipients:', error);
