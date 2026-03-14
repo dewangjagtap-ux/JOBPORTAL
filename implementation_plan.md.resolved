@@ -1,0 +1,74 @@
+# Implementation Plan - Dark-Themed Admin Dashboard UI
+
+Create a fully dark-themed, professional Admin Dashboard for the Campus Placement Job Portal using React and Tailwind CSS.
+
+## Proposed Changes
+
+### [Component] Tailwind CSS & Theme Foundation
+Update the project to support Tailwind CSS and define the dark theme color palette.
+
+#### [MODIFY] [package.json](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/package.json)
+- Add `tailwindcss`, `postcss`, and `autoprefixer` to devDependencies.
+
+#### [NEW] [tailwind.config.js](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/tailwind.config.js)
+- Configure Tailwind with the requested dark theme colors:
+  - Background: `#0f172a` (slate-900)
+  - Card background: `#1e293b` (slate-800)
+  - Primary: Indigo/Blue
+  - Borders: `#334155` (slate-700)
+
+#### [MODIFY] [index.css](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/index.css)
+- Add Tailwind directives.
+- Set global dark theme styles (background, text color).
+- Remove conflicting light theme styles.
+
+---
+
+### [Component] Core Layout Components
+Create reusable layout components that follow the dark theme requirements.
+
+#### [NEW] [AdminLayout.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/components/admin/AdminLayout.jsx)
+- A new layout wrapper for admin routes with a fixed dark sidebar and a scrollable main content area.
+
+#### [NEW] [Sidebar.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/components/admin/Sidebar.jsx)
+- A vertical sidebar with active link highlighting and smooth transitions.
+
+---
+
+### [Component] Admin Dashboard Pages
+Refactor existing admin pages to use the new UI components and Tailwind styling.
+
+#### [MODIFY] [AdminDashboard.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/pages/admin/AdminDashboard.jsx)
+- Redesign the overview page with premium stat cards and potentially simple charts.
+
+#### [MODIFY] [ManageUsers.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/pages/admin/ManageUsers.jsx)
+- Implement a dark-themed table for user management with row hover effects and clear actions.
+
+#### [MODIFY] [ManageJobs.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/pages/admin/ManageJobs.jsx)
+- Redesign the job management table and forms.
+
+#### [MODIFY] [Profile.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/pages/admin/Profile.jsx)
+- Update the admin profile page with dark-themed cards and forms.
+
+---
+
+### [Component] Reusable UI Components
+Create a set of common components to ensure consistency across the dashboard.
+
+#### [NEW] [Card.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/components/ui/Card.jsx), [Button.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/components/ui/Button.jsx), [Input.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/components/ui/Input.jsx), [Table.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/components/ui/Table.jsx), [Modal.jsx](file:///c:/Users/USER/JOBPORTAL%20-%20Copy/vite-job/src/components/ui/Modal.jsx)
+- Reusable Tailwind-based components mirroring the requested "deep dark" aesthetic.
+
+## Verification Plan
+
+### Automated Tests
+- No existing automated tests were found.
+- Verification will be done through manual browser testing.
+
+### Manual Verification
+1. **Theme Consistency**: Ensure across all admin pages that the background is `#0f172a` and cards are `#1e293b`.
+2. **Responsiveness**: Test the dashboard on different screen sizes (Desktop, Tablet, Mobile) using browser devtools.
+3. **Interactions**:
+   *   Verify Sidebar navigation works correctly and highlights active routes.
+   *   Verify Hover effects on cards, buttons, and table rows.
+   *   Verify Modal backdrop blur and centering.
+4. **Functionality**: Ensure CRUD operations (Manage Users, Jobs, Students) still work correctly with the new UI.
