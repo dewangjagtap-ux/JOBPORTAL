@@ -112,4 +112,57 @@ const updateAdminProfile = async (req, res) => {
     }
 };
 
-export { getPlatformStats, getAllUsers, deleteUser, getAdminProfile, updateAdminProfile };
+// @desc    Get AI Insights
+// @route   GET /api/admin/ai-insights
+// @access  Private/Admin
+const getAIInsights = async (req, res) => {
+    try {
+        // 1. Placement Rate
+        const totalApplications = await Application.countDocuments();
+        const acceptedApplications = await Application.countDocuments({ status: 'Accepted' });
+        const placementRate = totalApplications > 0 ? ((acceptedApplications / totalApplications) * 100).toFixed(1) : 0;
+
+        // 2. Most Active Company (by number of jobs posted)
+        const activeCompanyAgg = await Job.aggregate([
+            { $group: { _id: '$company', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 1 },
+            { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'companyDetails' } },
+            { $unwind: '$companyDetails' },
+            { $project: { name: '$companyDetails.companyDetails.companyName', email: '$companyDetails.email', count: 1 } }
+        ]);
+        const mostActiveCompany = activeCompanyAgg.length > 0 ? activeCompanyAgg[0] : null;
+
+        // 3. Most Applied Job
+        const topJobAgg = await Application.aggregate([
+            { $group: { _id: '$job', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 1 },
+            { $lookup: { from: 'jobs', localField: '_id', foreignField: '_id', as: 'jobDetails' } },
+            { $unwind: '$jobDetails' },
+            { $project: { title: '$jobDetails.title', companyName: '$jobDetails.companyName', count: 1 } }
+        ]);
+        const mostAppliedJob = topJobAgg.length > 0 ? topJobAgg[0] : null;
+
+        // 4. Top Student Skills
+        const topSkillsAgg = await User.aggregate([
+            { $match: { role: 'student' } },
+            { $unwind: '$skills' },
+            { $group: { _id: '$skills', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 },
+            { $project: { skill: '$_id', count: 1, _id: 0 } }
+        ]);
+
+        res.json({
+            placementRate,
+            mostActiveCompany,
+            mostAppliedJob,
+            topSkills: topSkillsAgg
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export { getPlatformStats, getAllUsers, deleteUser, getAdminProfile, updateAdminProfile, getAIInsights };

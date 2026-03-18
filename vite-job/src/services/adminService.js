@@ -43,5 +43,10 @@ const updateProfile = async (profileData) => {
   return data;
 };
 
-const adminService = { getCompanies, approveCompany, getUsers, deleteUser, getProfile, updateProfile };
+const getAIInsights = async () => {
+  const { data } = await api.get('/admin/ai-insights');
+  return data;
+};
+
+const adminService = { getCompanies, approveCompany, getUsers, deleteUser, getProfile, updateProfile, getAIInsights };
 export default adminService;
