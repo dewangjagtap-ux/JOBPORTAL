@@ -95,17 +95,42 @@ const AIInsightsSection = () => {
             
             <Row className="g-4 mb-4">
                 <Col md={12}>
-                    <Card className="shadow-sm border-0 bg-light">
-                        <Card.Body>
-                            <h5>🧠 AI Generated Summary</h5>
+                    <Card className="shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)' }}>
+                        <Card.Body className="p-4">
+                            <h5 className="mb-4 fw-bold text-dark d-flex align-items-center">
+                                <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
+                                    <i className="bi bi-robot fs-4"></i>
+                                </div>
+                                AI Generated Summary
+                            </h5>
                             {insights.length > 0 ? (
-                                <ul className="mb-0 text-muted">
-                                    {insights.map((insight, index) => (
-                                        <li key={index}><strong>Insight {index + 1}:</strong> {insight.text}</li>
-                                    ))}
-                                </ul>
+                                <div className="d-flex flex-column gap-3">
+                                    {insights.map((insight, index) => {
+                                        const icons = [
+                                            { icon: 'bi-graph-up-arrow', color: 'success' },
+                                            { icon: 'bi-lightbulb-fill', color: 'warning' },
+                                            { icon: 'bi-bullseye', color: 'danger' },
+                                            { icon: 'bi-stars', color: 'info' }
+                                        ];
+                                        const iconObj = icons[index % icons.length];
+                                        return (
+                                            <div key={index} className="d-flex align-items-start bg-white p-3 rounded-4 shadow-sm border border-light transition-all hover-shadow">
+                                                <div className={`text-${iconObj.color} bg-${iconObj.color} bg-opacity-10 p-2 rounded-circle me-3 d-flex align-items-center justify-content-center`} style={{ width: '40px', height: '40px' }}>
+                                                    <i className={`bi ${iconObj.icon} fs-5`}></i>
+                                                </div>
+                                                <div>
+                                                    <h6 className="mb-1 fw-bold text-dark">Key Insight {index + 1}</h6>
+                                                    <p className="mb-0 text-secondary" style={{ fontSize: '0.95rem' }}>{insight.text}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             ) : (
-                                <p className="text-muted mb-0">No insights available at the moment.</p>
+                                <Alert variant="light" className="mb-0 border shadow-sm d-flex align-items-center text-muted">
+                                    <i className="bi bi-info-circle fs-4 me-3 text-secondary"></i>
+                                    No insights available at the moment.
+                                </Alert>
                             )}
                         </Card.Body>
                     </Card>
