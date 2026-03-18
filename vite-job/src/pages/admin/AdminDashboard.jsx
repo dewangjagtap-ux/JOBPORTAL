@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Row, Col, Card } from 'react-bootstrap'
 import api from '../../services/api'
+import AIInsightsSection from '../../components/AIInsightsSection'
 
 export default function AdminDashboard() {
   const [jobsCount, setJobsCount] = useState(0)
@@ -49,6 +50,9 @@ export default function AdminDashboard() {
           </Card>
         </Col>
       </Row>
+
+      {/* AI Insights Section */}
+      <AIInsightsSection />
     </div>
   )
 }

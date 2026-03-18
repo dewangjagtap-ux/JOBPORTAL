@@ -11,6 +11,7 @@ import companyRoutes from './routes/companyRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import aiInsightsRoutes from './routes/aiInsightsRoutes.js';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin/ai', aiInsightsRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');
