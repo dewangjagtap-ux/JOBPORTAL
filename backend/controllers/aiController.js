@@ -1,9 +1,7 @@
 import User from '../models/User.js';
 import Application from '../models/Application.js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+import * as geminiService from '../services/geminiService.js';
+import { extractTextFromFile } from '../services/resumeParser.js';
 
 // @desc    Get student placement probability
 // @route   GET /api/ai/student/placement-probability/:studentId
@@ -207,58 +205,20 @@ export const getInterviewQuestions = async (req, res) => {
     }
 };
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
-
 // @desc    Upload resume, parse and extract data
 // @route   POST /api/ai/resume/upload
 // @access  Private (Student)
 export const uploadResumeForAI = async (req, res) => {
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ message: 'GEMINI_API_KEY is not configured on the server.' });
-        }
         if (!req.file) {
-            return res.status(400).json({ message: 'Please upload a PDF file' });
+            return res.status(400).json({ message: 'Please upload a PDF or DOCX file' });
         }
 
-        // Parse PDF
-        const pdfData = await pdfParse(req.file.buffer);
-        const resumeText = pdfData.text;
-
-        // Use Gemini to extract structured info
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = `
-        You are an AI specialized in analyzing student resumes. Extract the following information from the provided resume text and return it STRICTLY as a valid JSON object without any backticks, markdown, or extra text.
-
-        Expected JSON format:
-        {
-          "skills": ["skill1", "skill2"],
-          "domain": "Target job domain or title based on resume",
-          "projects": ["Project Name 1", "Project Name 2"],
-          "cgpa": 8.5 (extract as a number if found, otherwise null)
-        }
-
-        Resume Text:
-        """${resumeText}"""
-        `;
-
-        const result = await model.generateContent(prompt);
-        let extractedText = result.response.text();
-        extractedText = extractedText.replace(/```json/i, '').replace(/```/g, '').trim();
-
-        let extractedData;
-        try {
-            extractedData = JSON.parse(extractedText);
-        } catch (e) {
-             // Fallback if AI doesn't return perfect JSON
-             extractedData = {
-                 skills: ["Java", "React", "Node.js (Fallback)"],
-                 domain: "Software Engineer",
-                 projects: ["Academic Project"],
-                 cgpa: null
-             }
-        }
+        // Extract text using dedicated parser service
+        const resumeText = await extractTextFromFile(req.file.buffer, req.file.mimetype);
+        
+        // Use Gemini Service to extract structured info
+        const extractedData = await geminiService.extractResumeData(resumeText);
 
         res.json({ success: true, extractedData });
 
@@ -273,12 +233,6 @@ export const uploadResumeForAI = async (req, res) => {
 // @access  Private (Student)
 export const getResumeBasedQuestions = async (req, res) => {
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ message: 'GEMINI_API_KEY is not configured on the server.' });
-        }
-
-        // We assume the frontend passes the extracted data in headers or query. 
-        // For standard GET request, passing via query param (stringified)
         const resumeDataStr = req.query.resumeData;
         if (!resumeDataStr) {
              return res.status(400).json({ message: 'Missing resume data query parameter' });
@@ -286,49 +240,8 @@ export const getResumeBasedQuestions = async (req, res) => {
 
         const resumeData = JSON.parse(decodeURIComponent(resumeDataStr));
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = `
-        You are an expert technical recruiter and interviewer. Look at the following candidate details extracted from their resume:
-        Skills: ${resumeData.skills?.join(', ')}
-        Domain: ${resumeData.domain}
-        Projects: ${resumeData.projects?.join(', ')}
-
-        Generate three types of interview questions to test the candidate. 
-        Return the result STRICTLY as a valid JSON object conforming to the following structure, without markdown (like \`\`\`json) or any additional text.
-
-        {
-          "resume_questions": [
-             "Question about specific project 1",
-             "Question about specific project 2"
-          ],
-          "technical_questions": [
-             "Question about skill 1",
-             "Question about skill 2"
-          ],
-          "hr_questions": [
-             "Common HR question 1",
-             "Common HR question 2"
-          ]
-        }
-        
-        Generate exactly 3 questions per category.
-        `;
-
-        const result = await model.generateContent(prompt);
-        let generatedText = result.response.text();
-        generatedText = generatedText.replace(/```json/i, '').replace(/```/g, '').trim();
-
-        let questionsData;
-        try {
-            questionsData = JSON.parse(generatedText);
-        } catch(e) {
-            questionsData = {
-                resume_questions: ["Could you explain your projects in detail?"],
-                technical_questions: ["Explain the core concepts of the skills you mentioned."],
-                hr_questions: ["Tell me about yourself."]
-            }
-        }
-
+        // Use Gemini Service
+        const questionsData = await geminiService.generateInterviewQuestions(resumeData);
         res.json(questionsData);
 
     } catch (error) {
@@ -342,43 +255,13 @@ export const getResumeBasedQuestions = async (req, res) => {
 // @access  Private (Student)
 export const evaluateMockAnswer = async (req, res) => {
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ message: 'GEMINI_API_KEY is not configured' });
-        }
-        
         const { question, answer } = req.body;
         if (!question || !answer) {
              return res.status(400).json({ message: 'Question and answer are required' });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = `
-        You are an expert interviewer.
-        Question asked: "${question}"
-        User's answer: "${answer}"
-
-        Evaluate this answer out of 10.
-        Return STRICTLY valid JSON with no markdown tags.
-        {
-           "score": 8,
-           "feedback": "A short, actionable paragraph explaining what was good and how to improve."
-        }
-        `;
-
-        const result = await model.generateContent(prompt);
-        let evalText = result.response.text();
-        evalText = evalText.replace(/```json/i, '').replace(/```/g, '').trim();
-
-        let evalData;
-        try {
-            evalData = JSON.parse(evalText);
-        } catch(e) {
-            evalData = {
-                score: 5,
-                feedback: "Received your answer, but we were unable to generate AI feedback."
-            }
-        }
-
+        // Use Gemini Service
+        const evalData = await geminiService.evaluateMockAnswer(question, answer);
         res.json(evalData);
 
     } catch(error) {
