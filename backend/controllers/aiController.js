@@ -1,7 +1,9 @@
 import User from '../models/User.js';
 import Application from '../models/Application.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import pdfParse from 'pdf-parse';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 // @desc    Get student placement probability
 // @route   GET /api/ai/student/placement-probability/:studentId
