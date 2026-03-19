@@ -17,6 +17,7 @@ export default function Sidebar({ role = 'student' }) {
             <Nav.Link as={Link} to="/student/applied">Applied Jobs</Nav.Link>
             <Nav.Link as={Link} to="/student/resume">Resume Upload</Nav.Link>
             <Nav.Link as={Link} to="/student/profile">Profile</Nav.Link>
+            <Nav.Link as={Link} to="/student/interview-prep">Interview Prep</Nav.Link>
             <Nav.Link as={Link} to="/student/notifications">Notifications</Nav.Link>
           </>
         )}

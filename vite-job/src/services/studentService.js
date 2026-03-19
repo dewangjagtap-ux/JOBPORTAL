@@ -59,5 +59,39 @@ const updateProfile = async (profileData) => {
   return data;
 };
 
-const studentService = { getApplications, uploadResume, applyJob, getProfile, updateProfile, getJobs };
+const getPlacementProbability = async (studentId) => {
+  const { data } = await api.get(`/ai/student/placement-probability/${studentId}`);
+  return data;
+};
+
+const getInterviewQuestions = async () => {
+  const { data } = await api.get(`/ai/interview-prep`);
+  return data;
+};
+
+const uploadResumeForAI = async (file) => {
+  const formData = new FormData();
+  formData.append('resume', file);
+  const { data } = await api.post('/ai/resume/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return data;
+};
+
+const getResumeQuestions = async (studentId, resumeData) => {
+  const encodedData = encodeURIComponent(JSON.stringify(resumeData));
+  const { data } = await api.get(`/ai/interview/resume-questions/${studentId}?resumeData=${encodedData}`);
+  return data;
+};
+
+const evaluateMockAnswer = async (question, answer) => {
+  const { data } = await api.post('/ai/interview/mock', { question, answer });
+  return data;
+};
+
+const studentService = { 
+  getApplications, uploadResume, applyJob, getProfile, updateProfile, getJobs, 
+  getPlacementProbability, getInterviewQuestions, 
+  uploadResumeForAI, getResumeQuestions, evaluateMockAnswer 
+};
 export default studentService;

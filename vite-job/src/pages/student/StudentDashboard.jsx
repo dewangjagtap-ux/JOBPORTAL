@@ -14,6 +14,8 @@ export default function StudentDashboard() {
   const [resumeUploaded, setResumeUploaded] = useState(false)
   const [recentApps, setRecentApps] = useState([])
   const [profileCompletion, setProfileCompletion] = useState(0)
+  const [placementData, setPlacementData] = useState(null)
+  const [placementLoading, setPlacementLoading] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -61,6 +63,15 @@ export default function StudentDashboard() {
       }
     } catch (e) { console.error('Stats refresh failed', e) }
     calculateProfileCompletion()
+
+    if (user?._id) {
+      setPlacementLoading(true)
+      try {
+        const aiData = await studentService.getPlacementProbability(user._id)
+        setPlacementData(aiData)
+      } catch (e) { console.error('AI Data fetch failed', e) }
+      finally { setPlacementLoading(false) }
+    }
   }
 
   const handleUpload = async () => {
@@ -123,6 +134,36 @@ export default function StudentDashboard() {
               <div className="progress" style={{ height: 12 }}>
                 <div className="progress-bar" role="progressbar" style={{ width: `${profileCompletion}%` }} aria-valuenow={profileCompletion} aria-valuemin="0" aria-valuemax="100"></div>
               </div>
+            </Card.Body>
+          </Card>
+
+          <Card className="p-3 shadow-sm mb-3 border-left-primary">
+            <Card.Body>
+              <h5 className="mb-3">🎯 Placement Probability</h5>
+              {placementLoading ? (
+                <div className="text-muted">Calculating your placement probability...</div>
+              ) : placementData ? (
+                <div className="mt-3">
+                  <div className="d-flex align-items-center mb-3">
+                    <h2 className="mb-0 me-3 fw-bold text-primary">{placementData.probability}%</h2>
+                    <span className={`badge ${placementData.level === 'High' ? 'bg-success' : placementData.level === 'Medium' ? 'bg-warning text-dark' : 'bg-danger'} fs-6`}>
+                      {placementData.level} Chance
+                    </span>
+                  </div>
+                  {placementData.suggestions && placementData.suggestions.length > 0 && (
+                    <div className="bg-light p-3 rounded">
+                      <h6 className="text-muted mb-2">Suggestions to improve:</h6>
+                      <ul className="mb-0 text-muted small ps-3">
+                        {placementData.suggestions.map((s, idx) => (
+                          <li key={idx} className="mb-1">{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-muted">Not enough data to calculate probability. Consider completing your profile.</div>
+              )}
             </Card.Body>
           </Card>
 
