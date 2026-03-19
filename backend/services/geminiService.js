@@ -109,8 +109,8 @@ const getMockEvaluation = async () => {
 export const extractResumeData = async (resumeText) => {
     // Mock if missing API key
     if (!process.env.GEMINI_API_KEY) {
-        console.warn('GEMINI_API_KEY is missing. Using mock extraction fallback.');
-        return getMockExtractedData();
+        console.warn('GEMINI_API_KEY is missing. Using regex fallback extraction.');
+        return fallbackExtractData(resumeText);
     }
 
     const prompt = `
