@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Row, Col, Card, Button, Form, Alert } from 'react-bootstrap'
 import { useAuth } from '../../context/AuthContext'
 import studentService from '../../services/studentService'
@@ -234,6 +235,21 @@ export default function StudentDashboard() {
                   {msg && <div className={`mt-2 text-${msg.type}`}>{msg.text}</div>}
                 </>
               )}
+            </Card.Body>
+          </Card>
+
+          <Card className="p-3 shadow-sm mt-3 border-left-info animate-fade-right">
+            <Card.Body>
+              <h5 className="mb-2 text-info">
+                <i className="bi bi-robot me-2"></i>
+                AI Interview Practice
+              </h5>
+              <p className="text-muted small mb-3">
+                Upload your resume to generate personalized interview questions and practice via AI mock interviews.
+              </p>
+              <Button as={Link} to="/student/resume-ai" variant="outline-info" size="sm" className="w-100 fw-bold">
+                Start AI Mock Interview
+              </Button>
             </Card.Body>
           </Card>
         </Col>

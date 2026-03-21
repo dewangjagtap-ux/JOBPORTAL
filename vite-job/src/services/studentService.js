@@ -64,11 +64,6 @@ const getPlacementProbability = async (studentId) => {
   return data;
 };
 
-const getInterviewQuestions = async () => {
-  const { data } = await api.get(`/ai/interview-prep`);
-  return data;
-};
-
 const uploadResumeForAI = async (file) => {
   const formData = new FormData();
   formData.append('resume', file);
@@ -91,7 +86,7 @@ const evaluateMockAnswer = async (question, answer) => {
 
 const studentService = { 
   getApplications, uploadResume, applyJob, getProfile, updateProfile, getJobs, 
-  getPlacementProbability, getInterviewQuestions, 
+  getPlacementProbability, 
   uploadResumeForAI, getResumeQuestions, evaluateMockAnswer 
 };
 export default studentService;

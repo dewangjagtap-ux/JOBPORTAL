@@ -14,7 +14,6 @@ import StudentJobs from './pages/student/Jobs'
 import AppliedJobs from './pages/student/AppliedJobs'
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/Profile'
-import InterviewPrep from './pages/student/InterviewPrep'
 import ResumeInterviewAI from './pages/student/ResumeInterviewAI'
 
 import CompanyDashboard from './pages/company/CompanyDashboard'
@@ -56,7 +55,6 @@ function AppRoutes() {
           <Route path="applied" element={<AppliedJobs />} />
           <Route path="resume" element={<ResumeUpload />} />
           <Route path="profile" element={<StudentProfile />} />
-          <Route path="interview-prep" element={<InterviewPrep />} />
           <Route path="resume-ai" element={<ResumeInterviewAI />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
