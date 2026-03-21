@@ -1,10 +1,11 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { 
-    getStudentPlacementProbability, 
+import {
+    getStudentPlacementProbability,
     uploadResumeForAI,
     getResumeBasedQuestions,
-    evaluateMockAnswer
+    evaluateMockAnswer,
+    getSmartJobMatch
 } from '../controllers/aiController.js';
 import multer from 'multer';
 
@@ -12,6 +13,7 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/student/placement-probability/:studentId', protect, getStudentPlacementProbability);
+router.get('/jobs/match/:studentId', protect, getSmartJobMatch);
 
 // Resume-Based Interview AI routes
 router.post('/resume/upload', protect, upload.single('resume'), uploadResumeForAI);

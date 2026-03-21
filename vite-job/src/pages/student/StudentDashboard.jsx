@@ -17,6 +17,8 @@ export default function StudentDashboard() {
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [placementData, setPlacementData] = useState(null)
   const [placementLoading, setPlacementLoading] = useState(false)
+  const [recommendedJobs, setRecommendedJobs] = useState([])
+  const [recommendingLoading, setRecommendingLoading] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -72,6 +74,13 @@ export default function StudentDashboard() {
         setPlacementData(aiData)
       } catch (e) { console.error('AI Data fetch failed', e) }
       finally { setPlacementLoading(false) }
+
+      setRecommendingLoading(true)
+      try {
+        const rJobs = await studentService.getSmartJobMatch(user._id)
+        setRecommendedJobs(rJobs || [])
+      } catch (e) { console.error('Recommended jobs fetch failed', e) }
+      finally { setRecommendingLoading(false) }
     }
   }
 
@@ -252,6 +261,44 @@ export default function StudentDashboard() {
               </Button>
             </Card.Body>
           </Card>
+
+          {recommendingLoading ? (
+            <div className="text-center mt-3"><span className="spinner-border spinner-border-sm text-success"></span></div>
+          ) : recommendedJobs.length > 0 && (
+            <Card className="shadow-sm mt-3 border-left-success animate-fade-right">
+              <Card.Body>
+                <h5 className="mb-3 text-success fw-bold">
+                  💼 Recommended Jobs
+                </h5>
+                <ul className="list-unstyled mb-0">
+                  {recommendedJobs.map((job, idx) => (
+                    <li key={job.jobId || idx} className="mb-3 border-bottom pb-2">
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <div className="fw-bold" style={{ fontSize: '0.95rem' }}>
+                            {job.jobTitle} <span className="text-muted fw-normal">({job.company})</span>
+                          </div>
+                          {job.isBestFit && <span className="badge bg-success mt-1 me-2 px-2 py-1">Best Fit</span>}
+                          {job.suggestions && job.suggestions.length > 0 && (
+                            <div className="text-muted mt-1" style={{ fontSize: '0.75rem' }}>💡 <i>Tip: {job.suggestions[0]}</i></div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="d-flex justify-content-between align-items-center mt-2">
+                        <div>
+                           <span className="fw-bold text-success" style={{ fontSize: '0.9rem' }}>{job.matchPercentage}% Match</span>
+                           <span className="ms-1">{job.matchPercentage >= 70 ? '✅' : '⚠️'}</span>
+                        </div>
+                        <Button as={Link} to="/student/jobs" variant={job.matchPercentage >= 70 ? "success" : "outline-success"} size="sm" className="fw-bold px-3">
+                          Apply
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Card.Body>
+            </Card>
+          )}
         </Col>
       </Row>
     </div>

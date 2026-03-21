@@ -64,6 +64,11 @@ const getPlacementProbability = async (studentId) => {
   return data;
 };
 
+const getSmartJobMatch = async (studentId) => {
+  const { data } = await api.get(`/ai/jobs/match/${studentId}`);
+  return data;
+};
+
 const uploadResumeForAI = async (file) => {
   const formData = new FormData();
   formData.append('resume', file);
@@ -84,9 +89,9 @@ const evaluateMockAnswer = async (question, answer) => {
   return data;
 };
 
-const studentService = { 
-  getApplications, uploadResume, applyJob, getProfile, updateProfile, getJobs, 
-  getPlacementProbability, 
-  uploadResumeForAI, getResumeQuestions, evaluateMockAnswer 
+const studentService = {
+  getApplications, uploadResume, applyJob, getProfile, updateProfile, getJobs,
+  getPlacementProbability, getSmartJobMatch,
+  uploadResumeForAI, getResumeQuestions, evaluateMockAnswer
 };
 export default studentService;

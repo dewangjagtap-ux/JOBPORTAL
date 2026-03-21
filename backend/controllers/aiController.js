@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Application from '../models/Application.js';
 import * as geminiService from '../services/geminiService.js';
 import { extractTextFromFile } from '../services/resumeParser.js';
+import Job from '../models/Job.js';
 
 // @desc    Get student placement probability
 // @route   GET /api/ai/student/placement-probability/:studentId
@@ -16,7 +17,7 @@ export const getStudentPlacementProbability = async (req, res) => {
         }
 
         const student = await User.findById(studentId);
-        
+
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }
@@ -70,7 +71,7 @@ export const getStudentPlacementProbability = async (req, res) => {
 
         // Optional: Ensure at least a few random suggestions if missing.
         // For demonstration, these are rule-based.
-        
+
         // Calculate Total Score (0-100)
         let totalScore = Math.round(skillsScore + cgpaScore + appScore);
 
@@ -114,7 +115,7 @@ export const uploadResumeForAI = async (req, res) => {
 
         // Extract text using dedicated parser service
         const resumeText = await extractTextFromFile(req.file.buffer, req.file.mimetype);
-        
+
         // Use Gemini Service to extract structured info
         const extractedData = await geminiService.extractResumeData(resumeText);
 
@@ -133,7 +134,7 @@ export const getResumeBasedQuestions = async (req, res) => {
     try {
         const resumeDataStr = req.query.resumeData;
         if (!resumeDataStr) {
-             return res.status(400).json({ message: 'Missing resume data query parameter' });
+            return res.status(400).json({ message: 'Missing resume data query parameter' });
         }
 
         const resumeData = JSON.parse(decodeURIComponent(resumeDataStr));
@@ -155,15 +156,127 @@ export const evaluateMockAnswer = async (req, res) => {
     try {
         const { question, answer } = req.body;
         if (!question || !answer) {
-             return res.status(400).json({ message: 'Question and answer are required' });
+            return res.status(400).json({ message: 'Question and answer are required' });
         }
 
         // Use Gemini Service
         const evalData = await geminiService.evaluateMockAnswer(question, answer);
         res.json(evalData);
 
-    } catch(error) {
+    } catch (error) {
         console.error('Error evaluating answer:', error);
         res.status(500).json({ message: 'Server error processing AI evaluation' });
+    }
+};
+
+// @desc    Get Smart Job Match for a student
+// @route   GET /api/ai/jobs/match/:studentId
+// @access  Private (Student)
+export const getSmartJobMatch = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+
+        if (req.user._id.toString() !== studentId && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const student = await User.findById(studentId);
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+
+        const jobs = await Job.find({});
+
+        // Extract student data
+        const sCgpa = parseFloat(student.cgpa) || 0;
+        const sBranch = (student.branch || '').toLowerCase();
+        const sSkills = (student.skills || []).map(s => s.toLowerCase().trim());
+
+        const matchedJobs = jobs.map(job => {
+            // 1. Skills Match (50% weight)
+            const jSkills = (job.skills || []).map(s => s.toLowerCase().trim());
+            let skillsScore = 0;
+            if (jSkills.length > 0) {
+                const matchedCount = jSkills.filter(sk => sSkills.some(s => s.includes(sk) || sk.includes(s))).length;
+                skillsScore = (matchedCount / jSkills.length) * 50;
+            } else if (sSkills.length > 0) {
+                const titleLow = job.title.toLowerCase();
+                if (sSkills.some(sk => titleLow.includes(sk))) {
+                    skillsScore = 40;
+                } else {
+                    skillsScore = 25; // default moderate
+                }
+            } else {
+                skillsScore = 15;
+            }
+
+            // 2. CGPA Match (20% weight)
+            let cgpaScore = 0;
+            const reqCgpa = 7.0; // Assuming 7.0 is standard required CGPA
+            if (sCgpa >= reqCgpa) {
+                cgpaScore = 20; // full score
+            } else if (sCgpa > 0) {
+                cgpaScore = (sCgpa / reqCgpa) * 20; // partial score
+            } else {
+                cgpaScore = 10;
+            }
+
+            // 3. Branch Match (30% weight)
+            let branchScore = 0;
+            const titleLow = job.title.toLowerCase();
+            const isSoftware = titleLow.includes('developer') || titleLow.includes('software') || titleLow.includes('frontend') || titleLow.includes('backend') || titleLow.includes('data');
+            const isHardware = titleLow.includes('embedded') || titleLow.includes('hardware') || titleLow.includes('electronics');
+            
+            let reqBranches = [];
+            if (isHardware) reqBranches = ['entc', 'electronics', 'electrical', 'ece'];
+            else if (isSoftware) reqBranches = ['computer', 'it', 'cs', 'cse', 'software', 'information technology'];
+            else reqBranches = ['any'];
+
+            if (reqBranches.includes('any')) {
+                branchScore = 30;
+            } else if (sBranch && reqBranches.some(rb => sBranch.includes(rb) || rb.includes(sBranch))) {
+                branchScore = 30; // exact or close match
+            } else if (sBranch) {
+                branchScore = 15; // related branch (medium score)
+            } else {
+                branchScore = 10;
+            }
+
+            // Total Score
+            let totalMatch = Math.round(skillsScore + cgpaScore + branchScore);
+            const matchPercentage = Math.min(100, Math.max(15, totalMatch));
+            
+            let matchLevel = 'Low';
+            if (matchPercentage >= 70) matchLevel = 'High';
+            else if (matchPercentage >= 50) matchLevel = 'Medium';
+
+            let suggestions = [];
+            if (matchPercentage < 80 && jSkills.length > 0) {
+                const missing = jSkills.find(sk => !sSkills.includes(sk));
+                if (missing) suggestions.push(`Learn ${missing} to improve match`);
+            }
+
+            return {
+                jobId: job._id,
+                jobTitle: job.title,
+                company: job.companyName,
+                matchPercentage,
+                matchLevel,
+                suggestions
+            };
+        });
+
+        // Return top 5 matching jobs
+        matchedJobs.sort((a, b) => b.matchPercentage - a.matchPercentage);
+        const top5 = matchedJobs.slice(0, 5);
+        
+        // Tag best fit
+        if (top5.length > 0 && top5[0].matchPercentage >= 70) {
+            top5[0].isBestFit = true;
+        }
+
+        res.json(top5);
+
+    } catch (error) {
+        console.error('Error in smart job matching:', error);
+        res.status(500).json({ message: 'Server error calculating job matches' });
     }
 };
