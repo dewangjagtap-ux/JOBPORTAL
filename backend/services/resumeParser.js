@@ -9,16 +9,23 @@ const pdfParse = require('pdf-parse');
  */
 export const extractTextFromFile = async (buffer, mimetype) => {
     try {
-        if (!buffer) return '';
+        if (!buffer || buffer.length === 0) {
+            console.error('Buffer is empty or null');
+            return '';
+        }
+
+        console.log(`Extracting text from buffer of size ${buffer.length} with mimetype ${mimetype}`);
 
         if (mimetype === 'application/pdf') {
             const data = await pdfParse(buffer);
+            console.log(`Extracted PDF text length: ${data?.text?.length || 0}`);
             return data.text || '';
         } else if (
             mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
             mimetype === 'application/msword'
         ) {
             const result = await mammoth.extractRawText({ buffer });
+            console.log(`Extracted DOCX text length: ${result?.value?.length || 0}`);
             return result.value || '';
         } else {
             console.warn(`Unsupported mimetype: ${mimetype}. Attempting to parse as PDF.`);
@@ -36,66 +43,82 @@ export const extractTextFromFile = async (buffer, mimetype) => {
  * Used as a fallback if the Gemini API is unavailable or disabled.
  */
 export const fallbackExtractData = (text) => {
-    // 1. Default Handling
-    if (!text || text.trim() === '') {
-        return {
-            skills: ["HTML", "CSS", "Basic JavaScript"],
-            projects: ["Academic Project"],
-            cgpa: null,
-            domain: "General Software Engineer"
-        };
-    }
-
-    const lowerText = text.toLowerCase();
+    // We will ensure it doesn't just return "Academic Project" unless completely devoid of text.
+    let parsedText = text || '';
     
-    // 2. Keyword matching for skills
+    // Fallback dictionary
     const skillDictionary = [
-        "java", "python", "c++", "c#", "javascript", "typescript", 
-        "react", "angular", "vue", "node.js", "express", "django",
-        "spring boot", "mongodb", "sql", "postgresql", "mysql",
-        "aws", "docker", "kubernetes", "git", "machine learning", "dsa"
+        "java", "python", "javascript", "typescript", "c++", "c#", "ruby", "go", "php",
+        "react", "angular", "vue", "node.js", "express", "django", "flask", "spring",
+        "html", "css", "tailwind", "bootstrap", "mongodb", "sql", "postgresql", "mysql",
+        "aws", "docker", "kubernetes", "git", "linux", "jenkins", "machine learning", "dsa",
+        "data structures", "algorithms"
     ];
+
+    const lowerText = parsedText.toLowerCase();
     
+    // Find skills
     const foundSkills = skillDictionary.filter(skill => {
-        // Use word boundaries for strict matching where possible
-        const regex = new RegExp(`\\b${skill === 'c++' ? 'c\\+\\+' : skill.replace('.', '\\.')}\\b`, 'i');
+        const regex = new RegExp(`\\b${skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
         return regex.test(lowerText);
     });
 
-    // 3. Pattern Recognition for CGPA
+    // Determine Domain
+    let domain = "Software Engineer";
+    if (lowerText.includes("data scientist") || lowerText.includes("machine learning")) {
+        domain = "Data Scientist";
+    } else if (lowerText.includes("frontend") || lowerText.includes("ui") || lowerText.includes("react")) {
+        domain = "Frontend Developer";
+    } else if (lowerText.includes("backend") || lowerText.includes("node.js") || lowerText.includes("database")) {
+        domain = "Backend Developer";
+    } else if (lowerText.includes("full stack") || lowerText.includes("full-stack")) {
+        domain = "Full Stack Developer";
+    }
+
+    // Pattern Recognition for CGPA
     let cgpa = null;
-    // Matches commonly formatted CGPA strings: "CGPA: 8.5", "CGPA 9.1", "GPA: 3.8/4.0"
-    const cgpaRegex = /(?:cgpa|gpa)[\s:-]*([0-9]{1}\.[0-9]{1,2})/i;
-    const match = text.match(cgpaRegex);
+    const cgpaRegex = /(?:cgpa|gpa|score)[\s:-]*([0-9]{1}\.[0-9]{1,2})/i;
+    const match = parsedText.match(cgpaRegex);
     if (match && match[1]) {
         cgpa = parseFloat(match[1]);
     }
 
-    // 4. Pattern Recognition for Domain
-    let domain = "Software Developer";
-    if (lowerText.includes("data scientist") || lowerText.includes("machine learning")) {
-        domain = "Data Scientist";
-    } else if (lowerText.includes("frontend") || lowerText.includes("ui/ux")) {
-        domain = "Frontend Developer";
-    } else if (lowerText.includes("backend")) {
-        domain = "Backend Developer";
+    // Guess Projects based on common words near "Project" or "App"
+    const projects = [];
+    const keywords = ["app", "system", "platform", "website", "portal", "dashboard", "bot", "tool"];
+    
+    // Try to pluck capitalized phrases that contain these keywords
+    // For example "E-Commerce App" or "Student Management System"
+    const projectRegex = new RegExp(`([A-Z][A-Za-z0-9\\s\\-]{3,30}?(?:${keywords.join('|')}))\\b`, 'gi');
+    let projMatch;
+    const projectSet = new Set();
+    while ((projMatch = projectRegex.exec(parsedText)) !== null) {
+        if (projMatch[1].trim().length > 5) {
+            // Capitalize first letters
+            const cleanName = projMatch[1].trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            projectSet.add(cleanName);
+        }
+    }
+    
+    projectSet.forEach(p => projects.push(p));
+
+    // Fallbacks if extraction failed
+    if (projects.length === 0) {
+        if (parsedText.length > 50) {
+            projects.push("Main Capstone Project");
+        } else {
+            projects.push("Academic Project");
+        }
     }
 
-    // 5. Naive Project extraction based on common resume structures
-    const projects = [];
-    if (lowerText.includes("e-commerce") || lowerText.includes("ecommerce")) projects.push("E-Commerce Platform");
-    if (lowerText.includes("chat app") || lowerText.includes("client-server")) projects.push("Chat Application");
-    if (lowerText.includes("portfolio")) projects.push("Personal Portfolio");
-    if (lowerText.includes("management system")) projects.push("Management System");
-    
-    if (projects.length === 0) {
-        projects.push("Personal Project");
+    if (foundSkills.length === 0) {
+        foundSkills.push("HTML", "CSS", "Basic JavaScript");
     }
 
     return {
-        skills: foundSkills.length > 0 ? foundSkills : ["Programming Fundamentals"],
-        projects,
-        cgpa,
-        domain
+        skills: foundSkills,
+        domain: domain,
+        projects: projects.slice(0, 3), // max 3 projects
+        cgpa: cgpa || "N/A"
     };
 };

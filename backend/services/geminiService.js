@@ -64,10 +64,11 @@ const getMockQuestionsData = async (resumeData) => {
     // Dynamic Resume Questions based on random project names
     const projNames = resumeData?.projects && resumeData.projects.length > 0 ? resumeData.projects : ["your recent project"];
     const proj1 = projNames[0];
+    const topSkill = skillsStr.length > 0 ? skillsStr[0] : "technology";
     const resume_questions = [
-        `Walk me through the architecture of your ${proj1} project.`,
-        `What were the biggest technical challenges you faced while working on ${projNames.length > 1 ? projNames[1] : proj1}?`,
-        `If you had to rebuild ${proj1} today from scratch, what architectural choices would you change?`
+        `Can you walk me through the architecture of your ${proj1} project, specifically highlighting how you utilized ${topSkill}?`,
+        `What were the most significant technical challenges you encountered while developing ${projNames.length > 1 ? projNames[1] : proj1}, and how did you resolve them?`,
+        `If you were tasked with completely rebuilding ${proj1} from scratch today, what architectural choices or tech stacks would you change and why?`
     ];
 
     const hrPool = [
