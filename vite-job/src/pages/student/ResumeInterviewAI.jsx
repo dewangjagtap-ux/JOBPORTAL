@@ -14,12 +14,20 @@ export default function ResumeInterviewAI() {
   const [extractedData, setExtractedData] = useState(null);
   const [questionsData, setQuestionsData] = useState(null);
   
+  // Local editable strings for skills and projects to fix typing UX
+  const [skillsStr, setSkillsStr] = useState('');
+  const [projectsStr, setProjectsStr] = useState('');
+  
   // Mock Interview State
   const [mockActive, setMockActive] = useState(false);
   const [mockQuestion, setMockQuestion] = useState(null);
   const [mockAnswer, setMockAnswer] = useState('');
   const [mockFeedback, setMockFeedback] = useState(null);
   const [mockEvalLoading, setMockEvalLoading] = useState(false);
+
+  const handleDataChange = (field, value) => {
+    setExtractedData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleUploadAndAnalyze = async () => {
     if (!file) {
@@ -32,6 +40,8 @@ export default function ResumeInterviewAI() {
       const response = await studentService.uploadResumeForAI(file);
       if (response && response.extractedData) {
         setExtractedData(response.extractedData);
+        setSkillsStr(response.extractedData.skills?.join(', ') || '');
+        setProjectsStr(response.extractedData.projects?.join('\n') || '');
         setStep(2);
       } else {
         setError('Failed to extract data from resume.');
@@ -48,7 +58,14 @@ export default function ResumeInterviewAI() {
     setError(null);
     setLoading(true);
     try {
-      const response = await studentService.getResumeQuestions(user._id, extractedData);
+      // Sync the string states back to the array fields in extractedData
+      const finalExtraction = {
+        ...extractedData,
+        skills: skillsStr.split(',').map(s => s.trim()).filter(s => s !== ''),
+        projects: projectsStr.split('\n').map(p => p.trim()).filter(p => p !== '')
+      };
+
+      const response = await studentService.getResumeQuestions(user._id, finalExtraction);
       if (response && response.resume_questions) {
         setQuestionsData(response);
         setStep(3);
@@ -128,22 +145,46 @@ export default function ResumeInterviewAI() {
             <h5 className="mb-3 text-success">2. Extracted Data</h5>
             <Row className="g-3">
               <Col md={6}>
-                <div className="mb-2"><strong>Target Domain:</strong> {extractedData.domain || 'N/A'}</div>
-                <div className="mb-2"><strong>CGPA:</strong> {extractedData.cgpa || 'N/A'}</div>
+                <Form.Group className="mb-3">
+                  <Form.Label><strong>Target Domain</strong></Form.Label>
+                  <Form.Control 
+                    type="text" 
+                    value={extractedData.domain || ''} 
+                    onChange={(e) => handleDataChange('domain', e.target.value)}
+                    placeholder="e.g. Software Engineer"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label><strong>CGPA</strong></Form.Label>
+                  <Form.Control 
+                    type="text" 
+                    value={extractedData.cgpa || ''} 
+                    onChange={(e) => handleDataChange('cgpa', e.target.value)}
+                    placeholder="e.g. 8.5"
+                  />
+                </Form.Group>
               </Col>
               <Col md={6}>
-                <div className="mb-2"><strong>Skills:</strong></div>
-                <div className="d-flex flex-wrap gap-1 mb-2">
-                  {extractedData.skills?.map((skill, idx) => (
-                    <Badge bg="secondary" key={idx}>{skill}</Badge>
-                  ))}
-                </div>
-                <div className="mb-2"><strong>Projects:</strong></div>
-                <ul className="mb-0 ps-3">
-                  {extractedData.projects?.map((proj, idx) => (
-                    <li key={idx} className="small">{proj}</li>
-                  ))}
-                </ul>
+                <Form.Group className="mb-3">
+                  <Form.Label><strong>Skills</strong> (comma separated)</Form.Label>
+                  <Form.Control 
+                    as="textarea"
+                    rows={2}
+                    value={skillsStr} 
+                    onChange={(e) => setSkillsStr(e.target.value)}
+                    placeholder="e.g. React, Node.js, MongoDB"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label><strong>Projects</strong> (one per line)</Form.Label>
+                  <Form.Control 
+                    as="textarea"
+                    rows={3}
+                    value={projectsStr} 
+                    onChange={(e) => setProjectsStr(e.target.value)}
+                    placeholder="Describe your key projects..."
+                  />
+                </Form.Group>
               </Col>
             </Row>
             {step === 2 && (

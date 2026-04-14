@@ -50,9 +50,16 @@ export default function ManageCompanies() {
                 <td className="align-middle">{c.name}</td>
                 <td className="align-middle">{c.email}</td>
                 <td className="align-middle">
-                  <Badge bg={c.isApproved ? 'success' : 'warning'} className="px-3 py-2">
-                    {c.isApproved ? 'Approved' : 'Pending Approval'}
-                  </Badge>
+                  <div className="d-flex align-items-center gap-3">
+                    <Badge bg={c.isApproved ? 'success' : 'warning'} className="px-3 py-2">
+                      {c.isApproved ? 'Approved' : 'Pending Approval'}
+                    </Badge>
+                    {!c.isApproved && (
+                      <Button variant="success" size="sm" onClick={() => approve(c._id || c.id)}>
+                        Approve
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
